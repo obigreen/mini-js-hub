@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.iml
+
+# VS Code (если вдруг)
+.vscode/
+
+# Logs
+*.log
+
+# If later you add node tooling
+node_modules/
+dist/
+build/
+.cache/

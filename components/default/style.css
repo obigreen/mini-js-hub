@@ -1,0 +1,13 @@
+.default {
+    width: 100%;
+}
+
+.default__line {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.default__line + .default__line {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.70);
+}
