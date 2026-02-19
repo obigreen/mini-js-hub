@@ -1,0 +1,59 @@
+.default {
+    width: 100%;
+}
+
+.default__line {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.default__line + .default__line {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.70);
+}
+
+
+.palindrome_wrapper {
+
+}
+
+.palindrome {
+    display: flex;
+    flex-direction: column;
+    gap: var(--size_3);
+}
+
+.palindrome_input_wrapper {
+    max-width: 500px;
+    width: 100%;
+}
+
+.palindrome_input_wrapper input {
+    width: 100%;
+    border: none;
+    border-radius: var(--radius_1);
+    border-color: var(--border);
+    padding: 15px;
+    color: var(--surface);
+    font-size: var(--size_4);
+    box-shadow: var(--shadow);
+}
+
+.palindrome_input_wrapper input:focus {
+    border-color: var(--focus);
+}
+
+.validate p {
+    color: var(--text);
+    font-size: var(--size_5);
+    font-weight: 400;
+}
+
+
+.true {
+    color: var(--green_1);
+}
+
+.false {
+    color: var(--red);
+}
