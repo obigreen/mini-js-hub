@@ -1,0 +1,234 @@
+.default {
+    width: 100%;
+}
+
+.default_line {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.default_line + .default_line {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.70);
+}
+
+
+:root {
+    --obj3d-cream-front-light: #fff7ec;
+    --obj3d-cream-front-mid: #f6e8d3;
+    --obj3d-cream-front-deep: #e9d4b3;
+    --obj3d-cream-side-light: #f2e0c4;
+    --obj3d-cream-side-deep: #dec19a;
+    --obj3d-cream-top-light: #fffdf7;
+    --obj3d-cream-top-deep: #f3e4cb;
+    --obj3d-cream-bottom-light: #dbc09a;
+    --obj3d-cream-bottom-deep: #c4a377;
+    --obj3d-cream-edge: rgba(178, 144, 96, 0.35);
+}
+
+.obj3d-wrap {
+    width: min(100%, 780px);
+    display: flex;
+    justify-content: center;
+    margin: 16px auto 6px;
+}
+
+.obj3d-stage {
+    position: relative;
+    width: 100%;
+    min-height: 390px;
+    padding: 16px 0 10px;
+    overflow: hidden;
+}
+
+.obj3d-rotator {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 2;
+    transform: translate(-50%, -46%) rotateZ(-90deg) scale(0.54);
+    transform-origin: center center;
+}
+
+.obj3d-scene {
+    position: relative;
+    width: 640px;
+    height: 340px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1200px;
+    perspective-origin: center center;
+}
+
+.obj3d-cube {
+    position: relative;
+    width: 640px;
+    height: 340px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform-style: preserve-3d;
+    animation: obj3d-rotate-cube 10s infinite linear;
+}
+
+.obj3d-side {
+    border: 1px solid var(--obj3d-cream-edge);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+.obj3d-face-back.obj3d-side,
+.obj3d-face-front.obj3d-side {
+    position: absolute;
+    width: 384px;
+    height: 199px;
+}
+
+.obj3d-face-top.obj3d-side {
+    position: absolute;
+    width: 384px;
+    height: 64px;
+}
+
+.obj3d-face-right.obj3d-side,
+.obj3d-face-left.obj3d-side {
+    position: absolute;
+    width: 64px;
+    height: 199px;
+}
+
+.obj3d-face-bottom.obj3d-side {
+    position: absolute;
+    width: 384px;
+    height: 64px;
+}
+
+.obj3d-face-back {
+    transform: translateZ(-32px) scale(-1, 1);
+    /* background: url("../img/2.jpg") center / cover; */
+    background: linear-gradient(145deg, #f7ead6 0%, #ecd8ba 52%, #dfc19b 100%);
+}
+
+.obj3d-face-front {
+    transform: translateZ(32px);
+    /* background: url("../img/1.jpg") center / cover; */
+    background: linear-gradient(145deg, var(--obj3d-cream-front-light) 0%, var(--obj3d-cream-front-mid) 56%, var(--obj3d-cream-front-deep) 100%);
+}
+
+.obj3d-face-top {
+    transform: translateY(-98.9px) rotateX(90deg);
+    /* background: url("../img/4.jpg") center / cover; */
+    background: linear-gradient(180deg, var(--obj3d-cream-top-light) 0%, var(--obj3d-cream-top-deep) 100%);
+}
+
+.obj3d-face-bottom {
+    transform: translateY(98.9px) rotateX(-90deg);
+    /* background: url("../img/4.jpg") center / cover; */
+    background: linear-gradient(180deg, var(--obj3d-cream-bottom-light) 0%, var(--obj3d-cream-bottom-deep) 100%);
+}
+
+.obj3d-face-left {
+    transform: translateX(192px) rotateY(90deg);
+    /* background: url("../img/3.jpg") center no-repeat; */
+    /* background-size: cover; */
+    background: linear-gradient(180deg, var(--obj3d-cream-side-light) 0%, var(--obj3d-cream-side-deep) 100%);
+}
+
+.obj3d-face-right {
+    transform: translateX(-192px) rotateY(90deg);
+    /* background: url("../img/3.jpg") center no-repeat; */
+    /* background-size: cover; */
+    background: linear-gradient(180deg, #f0dfc4 0%, #d8bb93 100%);
+}
+
+@keyframes obj3d-rotate-cube {
+    100% {
+        transform: rotateX(-360deg);
+    }
+}
+
+.obj3d-shadow-box {
+    position: absolute;
+    left: -26px;
+    bottom: -38px;
+    width: 85%;
+    height: 100%;
+    scale: 0.64;
+    transform: rotate(20deg);
+}
+
+.obj3d-shadow {
+    position: relative;
+    width: 85%;
+    height: 100%;
+    opacity: 0.55;
+    z-index: 0;
+    border-radius: 50%;
+    animation: obj3d-rotate-shadow 10s infinite linear;
+    transform: translate3d(-240px, 26px, -204px) rotateY(101deg) rotateX(22deg) rotateZ(-98deg) scale(0.5);
+}
+
+.obj3d-shadow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(190, 162, 121, 0.45);
+    filter: blur(70px);
+}
+
+@keyframes obj3d-rotate-shadow {
+    50% {
+        transform: translate3d(-240px, 26px, -204px) rotateY(101deg) rotateX(22deg) rotateZ(79deg) scale(0.5);
+    }
+
+    100% {
+        transform: translate3d(-240px, 26px, -204px) rotateY(101deg) rotateX(22deg) rotateZ(264deg) scale(0.5);
+    }
+}
+
+
+@media (max-width: 900px) {
+    .obj3d-stage {
+        min-height: 310px;
+        padding: 10px 0 6px;
+    }
+
+    .obj3d-rotator {
+        transform: translate(-50%, -46%) rotateZ(-90deg) scale(0.45);
+    }
+}
+
+@media (max-width: 767px) {
+    .obj3d-stage {
+        height: 320px;
+        min-height: 320px;
+        padding: 10px 0 6px;
+    }
+
+    .obj3d-rotator {
+        transform: translate(-50%, -46%) rotateZ(-90deg) scale(0.43);
+    }
+
+    .obj3d-face-left {
+        transform: translateX(192px) rotateY(90deg);
+    }
+
+    .obj3d-face-right {
+        transform: translateX(-192px) rotateY(90deg);
+    }
+
+    .obj3d-shadow {
+        transform: translate3d(-240px, 26px, -204px) rotateY(101deg) rotateX(22deg) rotateZ(-98deg) scale(0.5);
+    }
+
+    @keyframes obj3d-rotate-shadow {
+        50% {
+            transform: translate3d(-240px, 26px, -204px) rotateY(101deg) rotateX(22deg) rotateZ(79deg) scale(0.5);
+        }
+
+        100% {
+            transform: translate3d(-240px, 26px, -204px) rotateY(101deg) rotateX(22deg) rotateZ(264deg) scale(0.5);
+        }
+    }
+}

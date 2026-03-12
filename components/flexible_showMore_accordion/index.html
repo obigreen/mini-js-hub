@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flexible Show More Accordion</title>
+    <link rel="stylesheet" href="../../css/common.css" />
+    <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+<main class="page">
+    <div class="global-container">
+        <div class="topbar">
+            <a class="back" href="../../index.html" aria-label="Вернуться на главную">
+                <span aria-hidden="true">🏃🚶🧎</span>
+                <span>Back</span>
+            </a>
+        </div>
+
+        <h1 class="h1">Flexible Show More Accordion</h1>
+        <p class="p-muted">Адаптивный список карточек с управлением видимостью</p>
+
+        <section class="card default">
+            <p class="default_line">
+                For ex. - Used files: <span class="mono">common.css</span> + <span class="mono">style.css</span> + <span class="mono">script.js</span>
+            </p>
+
+            <section class="fsm">
+                <h2 class="fsm-title">Main title</h2>
+                <div class="fsm-grid-wrapper">
+                    <div class="fsm-grid">
+                        <article class="fsm-item fsm-item-show">
+                            <div class="fsm-media" aria-hidden="true">Card Image</div>
+                            <div class="fsm-info">
+                                <h3 class="fsm-info-title">Title 1</h3>
+                                <p class="fsm-info-description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.</p>
+                                <button class="fsm-info-btn" type="button">PUSH</button>
+                            </div>
+                        </article>
+
+                        <article class="fsm-item fsm-item-show">
+                            <div class="fsm-media" aria-hidden="true">Card Image</div>
+                            <div class="fsm-info">
+                                <h3 class="fsm-info-title">Title 2</h3>
+                                <p class="fsm-info-description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.</p>
+                                <button class="fsm-info-btn" type="button">PUSH</button>
+                            </div>
+                        </article>
+
+                        <article class="fsm-item fsm-item-show">
+                            <div class="fsm-media" aria-hidden="true">Card Image</div>
+                            <div class="fsm-info">
+                                <h3 class="fsm-info-title">Title 3</h3>
+                                <p class="fsm-info-description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.</p>
+                                <button class="fsm-info-btn" type="button">PUSH</button>
+                            </div>
+                        </article>
+
+                        <article class="fsm-item fsm-item-hidden">
+                            <div class="fsm-media" aria-hidden="true">Card Image</div>
+                            <div class="fsm-info">
+                                <h3 class="fsm-info-title">Title 4</h3>
+                                <p class="fsm-info-description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.</p>
+                                <button class="fsm-info-btn" type="button">PUSH</button>
+                            </div>
+                        </article>
+
+                        <article class="fsm-item fsm-item-hidden">
+                            <div class="fsm-media" aria-hidden="true">Card Image</div>
+                            <div class="fsm-info">
+                                <h3 class="fsm-info-title">Title 5</h3>
+                                <p class="fsm-info-description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.</p>
+                                <button class="fsm-info-btn" type="button">PUSH</button>
+                            </div>
+                        </article>
+
+                        <article class="fsm-item fsm-item-hidden">
+                            <div class="fsm-media" aria-hidden="true">Card Image</div>
+                            <div class="fsm-info">
+                                <h3 class="fsm-info-title">Title 6</h3>
+                                <p class="fsm-info-description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.</p>
+                                <button class="fsm-info-btn" type="button">PUSH</button>
+                            </div>
+                        </article>
+
+                    </div>
+                    <button class="fsm-toggle" type="button">Show More</button>
+                </div>
+            </section>
+
+
+            <p class="default_line">
+                For ex. button behavior: each click opens one grid batch (desktop: +3, tablet: +4, mobile: +2); <span class="mono">Show Less</span> collapses back to the initial view.
+            </p>
+        </section>
+    </div>
+</main>
+
+<script src="./script.js"></script>
+</body>
+</html>

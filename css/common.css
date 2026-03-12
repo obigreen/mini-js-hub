@@ -42,7 +42,7 @@
 
 html,
 body {
-    height: 100%;
+    min-height: 100%;
 }
 
 html {
@@ -51,11 +51,13 @@ html {
 }
 
 body {
+    min-height: 100dvh;
     margin: 0;
     background:
             radial-gradient(1100px 800px at 15% 0%, rgba(21, 121, 77, 0.22), transparent 55%),
             radial-gradient(900px 650px at 95% 25%, rgba(63, 178, 123, 0.18), transparent 55%),
             var(--bg);
+    background-repeat: no-repeat;
     color: var(--text);
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     line-height: 1.5;
@@ -93,11 +95,11 @@ textarea {
 
 /* === Layout === */
 .page {
-    min-height: 100%;
+    min-height: 100dvh;
     padding: var(--size_6) var(--size_3);
 }
 
-.container {
+.global-container {
     width: 100%;
     max-width: var(--container);
     margin: 0 auto;
