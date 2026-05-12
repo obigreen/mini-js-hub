@@ -1,0 +1,17 @@
+/* Error: Undefined variable.
+ *     ,
+ * 123 |   transform: rotateY(calc(var(--angle) - 90deg)) translateX(calc(100% / (2 * #{tan(pi() / $face-count)}) - #{$anti-gap-shift})) rotateY(90deg);
+ *     |                                                                                           ^^^^^^^^^^^
+ *     '
+ *   style.scss 123:91  root stylesheet */
+
+body::before {
+  font-family: "Source Code Pro", "SF Mono", Monaco, Inconsolata, "Fira Mono",
+      "Droid Sans Mono", monospace, monospace;
+  white-space: pre;
+  display: block;
+  padding: 1em;
+  margin-bottom: 1em;
+  border-bottom: 2px solid black;
+  content: "Error: Undefined variable.\a     \2577 \a 123 \2502    transform: rotateY(calc(var(--angle) - 90deg)) translateX(calc(100% / (2 * #{tan(pi() / $face-count)}) - #{$anti-gap-shift})) rotateY(90deg);\a     \2502                                                                                            ^^^^^^^^^^^\a     \2575 \a   style.scss 123:91  root stylesheet";
+}
