@@ -38,45 +38,6 @@
                 <button class="timer-button" type="button" disabled>Start</button>
             </div>
 
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    const numberCount = 48;
-                    const egg = document.querySelector(".egg");
-                    const eggCenter = document.querySelector(".egg-center");
-
-                    if (!egg || !eggCenter) {
-                        return null;
-                    }
-
-
-                    const eggTop = document.createElement("div");
-                    eggTop.className = "egg-top";
-                    eggTop.style.setProperty("--number-count", numberCount);
-                    const numbersContainer = document.createElement("div");
-                    numbersContainer.className = "time-ruler-numbers-container";
-
-
-                    const numberHtml = Array.from({length: numberCount}, (_, index) => {
-                        return `
-                         <div class="time-ruler-number-wrapper" style="--i: ${index}">
-                             <svg class="time-number-face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1740 76" aria-hidden="true">
-                                   <use href="#time-ruler"></use>
-                             </svg>
-                         </div>
-                        `
-                    })
-
-                    numbersContainer.innerHTML = numberHtml.join("");
-                    eggTop.append(numbersContainer);
-                    egg.insertBefore(eggTop, eggCenter);
-
-
-                    //тут еще проблема наверно еще в взаимодействием js с css, это вот тоже моя больная тема, такие выкрутасы с css, наверно вообще то что я предположил это кк раз недостаток понимания этого взаимодействия
-
-                })
-
-            </script>
-
             <svg viewBox="0 0 1740 76" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
                  style="position: absolute; width: 0; height: 0;">
                 <defs>
@@ -153,12 +114,14 @@
                     <div class="source_title"><span class="source_info_title">Project name:</span> Functional Egg Timer
                     </div>
                     <div class="source_meta">
-                        <span class="source_author"><span class="source_info_title">Author:</span> <a target="_blank"
-                                                                                                      href="https://codepen.io/nicolasjesenberger/pen/VwVVzjg">Nicolas Jesenberger</a></span>
+                        <span class="source_author">
+                            <span class="source_info_title">Author:</span>
+                            <a target="_blank"
+                               href="https://codepen.io/nicolasjesenberger">Nicolas Jesenberger</a></span>
                     </div>
                     <div>
                         <a class="source_link"
-                           href=""
+                           href="https://codepen.io/nicolasjesenberger/pen/VwVVzjg"
                            target="_blank"
                            rel="noreferrer noopener"
                            aria-label="Открыть источник кода">

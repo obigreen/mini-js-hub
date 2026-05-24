@@ -17,12 +17,21 @@ $faceCount: 48;
 }
 
 
+.egg-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 15px;
+}
+
 .egg {
   --shadow-opacity: 1;
   border-radius: 100% 100% 76% 76% / 118% 118% 80% 80%;
   filter: drop-shadow(0 0px 2px Rgb(0 0 0 / var(--shadow-opacity)));
   cursor: pointer;
   width: max-content;
+
 
   .egg-container.active & {
     --shadow-opacity: 0;

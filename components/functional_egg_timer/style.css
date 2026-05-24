@@ -12,6 +12,14 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+.egg-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 15px;
+}
+
 .egg {
   --shadow-opacity: 1;
   border-radius: 100% 100% 76% 76%/118% 118% 80% 80%;
