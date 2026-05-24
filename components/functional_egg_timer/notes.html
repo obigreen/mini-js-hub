@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functional Egg Timer Notes</title>
+    <style>
+        :root {
+            --bg: #151515;
+            --panel: #202020;
+            --panel-soft: #262626;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.70);
+            --border: rgba(255, 255, 255, 0.12);
+            --accent: #41b883;
+            --accent-strong: #2f9f6b;
+            --code-bg: #101312;
+            --danger: #ff7a59;
+            --radius: 14px;
+            --container: 980px;
+            --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            background:
+                    radial-gradient(900px 600px at 12% 0%, rgba(65, 184, 131, 0.18), transparent 55%),
+                    radial-gradient(700px 500px at 92% 18%, rgba(255, 122, 89, 0.10), transparent 55%),
+                    var(--bg);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        code,
+        pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        .page {
+            width: min(100% - 32px, var(--container));
+            margin: 0 auto;
+            padding: 32px 0 56px;
+        }
+
+        .note-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            margin: 0 -16px 28px;
+            padding: 16px;
+            background: rgba(21, 21, 21, 0.86);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+        }
+
+        .note-header-inner {
+            width: min(100%, var(--container));
+            margin: 0 auto;
+        }
+
+        .note-kicker {
+            margin: 0 0 4px;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .note-title {
+            margin: 0 0 14px;
+            font-size: clamp(28px, 5vw, 46px);
+            line-height: 1.08;
+        }
+
+        .note-nav {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .note-nav a,
+        .note-nav span {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .note-nav a:hover,
+        .note-nav a.is-active {
+            border-color: rgba(65, 184, 131, 0.55);
+            background: rgba(65, 184, 131, 0.15);
+        }
+
+        .note-nav span {
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .note-section {
+            margin-top: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: rgba(32, 32, 32, 0.82);
+            box-shadow: var(--shadow);
+        }
+
+        .note-section h2 {
+            margin: 0 0 12px;
+            font-size: 26px;
+            line-height: 1.2;
+        }
+
+        .note-section h3 {
+            margin: 24px 0 8px;
+            font-size: 19px;
+            line-height: 1.25;
+        }
+
+        .note-section p {
+            margin: 10px 0;
+            color: var(--muted);
+        }
+
+        .note-section ul,
+        .note-section ol {
+            margin: 10px 0;
+            padding-left: 22px;
+            color: var(--muted);
+        }
+
+        .note-section li + li {
+            margin-top: 6px;
+        }
+
+        .note-section strong {
+            color: var(--text);
+        }
+
+        .inline-code {
+            padding: 2px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            font-size: 0.94em;
+        }
+
+        .callout {
+            margin: 16px 0;
+            padding: 14px 16px;
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            background: rgba(65, 184, 131, 0.10);
+            color: var(--text);
+        }
+
+        .callout.warning {
+            border-left-color: var(--danger);
+            background: rgba(255, 122, 89, 0.10);
+        }
+
+        .code-card {
+            margin: 16px 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 12px;
+            background: var(--code-bg);
+        }
+
+        .code-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .code-card-title {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .copy-button {
+            border: 1px solid rgba(65, 184, 131, 0.45);
+            border-radius: 8px;
+            padding: 6px 10px;
+            background: rgba(65, 184, 131, 0.12);
+            color: var(--text);
+            cursor: pointer;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .copy-button:hover {
+            background: rgba(65, 184, 131, 0.20);
+        }
+
+        pre {
+            margin: 0;
+            padding: 16px;
+            overflow-x: auto;
+            color: #d6f5e4;
+            font-size: 14px;
+            line-height: 1.55;
+            white-space: pre;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .mini-card {
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .mini-card h3 {
+            margin-top: 0;
+        }
+
+        @media (max-width: 720px) {
+            .page {
+                width: min(100% - 20px, var(--container));
+                padding-top: 16px;
+            }
+
+            .note-header {
+                margin: 0 -10px 18px;
+                padding: 12px 10px;
+            }
+
+            .note-section {
+                padding: 18px;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <header class="note-header">
+        <div class="note-header-inner">
+            <p class="note-kicker">Functional Egg Timer</p>
+            <h1 class="note-title">Конспект разработки</h1>
+            <nav class="note-nav" aria-label="Навигация по шагам">
+                <a href="#step1" class="is-active">Step 1</a>
+                <span>Step 2</span>
+                <span>Step 3</span>
+                <span>Step 4</span>
+            </nav>
+        </div>
+    </header>
+
+    <section class="note-section" id="step1">
+        <h2>Step 1: SCSS, Pug и генерация разметки через JS</h2>
+        <p>
+            Исходник таймера взят из CodePen Nicolas Jesenberger. Главная цель проекта - учиться JavaScript,
+            но в этом компоненте дополнительно появился SCSS, потому что стили автора написаны не на чистом CSS.
+        </p>
+
+        <div class="callout">
+            Важное решение: в проекте используем SCSS для стилей, но не подключаем Pug.
+            Повторяющуюся HTML-разметку линейки генерируем через JavaScript-цикл.
+        </div>
+
+        <h3>Что уже выяснили</h3>
+        <ul>
+            <li>Браузер напрямую читает <code class="inline-code">index.html</code>, <code class="inline-code">style.css</code> и <code class="inline-code">script.js</code>.</li>
+            <li>SCSS браузер напрямую не читает. Его нужно компилировать в обычный CSS.</li>
+            <li>CodePen автора использует не только SCSS, но и Pug для HTML.</li>
+            <li>Pug-строки, вставленные прямо в обычный HTML, не выполняются.</li>
+            <li>Для 48 повторяющихся элементов линейки не пишем HTML руками, а создаем их через JS.</li>
+        </ul>
+
+        <h3>SCSS в этом компоненте</h3>
+        <p>
+            Sass установлен локально внутри папки <code class="inline-code">components/functional_egg_timer</code>.
+            Такая схема подходит, если SCSS нужен только этому компоненту.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Команды для Sass</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>cd components/functional_egg_timer
+npm install -D sass
+
+npm list sass
+npx sass --version
+
+npx sass style.scss style.css
+npx sass --watch style.scss:style.css</code></pre>
+        </div>
+
+        <div class="callout warning">
+            Правило работы: пишем в <code class="inline-code">style.scss</code>, а HTML подключает <code class="inline-code">style.css</code>.
+            После запуска Sass-файл <code class="inline-code">style.css</code> лучше не редактировать руками, потому что он будет перезаписываться.
+        </div>
+
+        <h3>Почему кусок автора не отрабатывал</h3>
+        <p>
+            Этот код выглядит как разметка, но это не HTML. Это Pug-синтаксис, который CodePen сначала компилирует в HTML.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Pug-код из CodePen</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>- const faceCount = 48
+.egg-top(style=`--face-count: ${faceCount}`)
+    .time-ruler-faces-container
+        - for (let i = 0; i &lt; faceCount; i++)
+            .time-ruler-face-wrapper(style=`--i: ${i}`)
+                svg.time-ruler-face(xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1740 76", aria-hidden="true")
+                    use(href="#time-ruler")</code></pre>
+        </div>
+
+        <p>
+            Pug работает как препроцессор для HTML:
+        </p>
+        <ul>
+            <li><code class="inline-code">.egg-top</code> превращается в <code class="inline-code">&lt;div class="egg-top"&gt;</code>.</li>
+            <li><code class="inline-code">- const faceCount = 48</code> выполняется на этапе компиляции Pug.</li>
+            <li><code class="inline-code">for</code> в Pug генерирует 48 HTML-блоков до загрузки страницы в браузере.</li>
+        </ul>
+
+        <h3>Что должен получить браузер</h3>
+        <p>
+            В обычном HTML в итоге должна появиться такая структура. Внутри контейнера должно быть 48
+            <code class="inline-code">.time-ruler-face-wrapper</code> с индексами от <code class="inline-code">0</code> до <code class="inline-code">47</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Итоговая HTML-идея</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>&lt;div class="egg-top" style="--face-count: 48"&gt;
+    &lt;div class="time-ruler-faces-container"&gt;
+        &lt;div class="time-ruler-face-wrapper" style="--i: 0"&gt;...&lt;/div&gt;
+        &lt;div class="time-ruler-face-wrapper" style="--i: 1"&gt;...&lt;/div&gt;
+        &lt;div class="time-ruler-face-wrapper" style="--i: 2"&gt;...&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <h3>JS-аналог Pug-цикла</h3>
+        <p>
+            Вместо Pug используем обычный JavaScript: создаем верх яйца, создаем контейнер линейки,
+            генерируем 48 строк HTML и вставляем их в DOM.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Код генерации разметки</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>document.addEventListener("DOMContentLoaded", () =&gt; {
+    const faceCount = 48;
+
+    const egg = document.querySelector(".egg");
+    const eggCenter = document.querySelector(".egg-center");
+
+    if (!egg || !eggCenter) {
+        return;
+    }
+
+    const eggTop = document.createElement("div");
+    eggTop.className = "egg-top";
+    eggTop.style.setProperty("--face-count", faceCount);
+
+    const facesContainer = document.createElement("div");
+    facesContainer.className = "time-ruler-faces-container";
+
+    const facesHtml = Array.from({ length: faceCount }, (_, index) =&gt; {
+        return `
+            &lt;div class="time-ruler-face-wrapper" style="--i: ${index}"&gt;
+                &lt;svg class="time-ruler-face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1740 76" aria-hidden="true"&gt;
+                    &lt;use href="#time-ruler"&gt;&lt;/use&gt;
+                &lt;/svg&gt;
+            &lt;/div&gt;
+        `;
+    });
+
+    facesContainer.innerHTML = facesHtml.join("");
+
+    eggTop.append(facesContainer);
+    egg.insertBefore(eggTop, eggCenter);
+});</code></pre>
+        </div>
+
+        <h3>Разбор <code class="inline-code">Array.from</code></h3>
+        <p>
+            Строка ниже создает массив из 48 строк HTML. Название <code class="inline-code">facesHtml</code>
+            лучше читать как "HTML для всех граней".
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Array.from</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const facesHtml = Array.from({ length: faceCount }, (_, index) =&gt; {
+    return `...`;
+});</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">{ length: faceCount }</code> - объект. Если <code class="inline-code">faceCount = 48</code>, то это как <code class="inline-code">{ length: 48 }</code>.</li>
+            <li><code class="inline-code">Array.from(...)</code> создает массив нужной длины.</li>
+            <li>Вторая часть <code class="inline-code">(_, index) =&gt; { ... }</code> запускается для каждого элемента массива.</li>
+            <li><code class="inline-code">index</code> - номер текущего прохода: <code class="inline-code">0, 1, 2 ... 47</code>.</li>
+            <li><code class="inline-code">_</code> - обычное имя параметра. Его используют как заглушку, когда первый аргумент не нужен.</li>
+        </ul>
+
+        <div class="callout">
+            В callback у <code class="inline-code">Array.from</code> обычно доступны два значения:
+            <code class="inline-code">(currentValue, index)</code>. Здесь <code class="inline-code">currentValue</code>
+            не нужен, поэтому вместо него написан <code class="inline-code">_</code>.
+        </div>
+
+        <h3>Разбор <code class="inline-code">join("")</code></h3>
+        <p>
+            После <code class="inline-code">Array.from</code> получается массив строк, а не один HTML.
+            Метод <code class="inline-code">join("")</code> склеивает все строки массива в одну большую строку.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">join без запятых</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const parts = ["&lt;div&gt;0&lt;/div&gt;", "&lt;div&gt;1&lt;/div&gt;", "&lt;div&gt;2&lt;/div&gt;"];
+
+parts.join("");
+// "&lt;div&gt;0&lt;/div&gt;&lt;div&gt;1&lt;/div&gt;&lt;div&gt;2&lt;/div&gt;"
+
+parts.join();
+// "&lt;div&gt;0&lt;/div&gt;,&lt;div&gt;1&lt;/div&gt;,&lt;div&gt;2&lt;/div&gt;"</code></pre>
+        </div>
+
+        <p>
+            Важно: <code class="inline-code">join("")</code> не делает один HTML-блок из 48 блоков.
+            Он делает одну текстовую HTML-строку. Потом <code class="inline-code">innerHTML</code>
+            говорит браузеру разобрать эту строку как HTML.
+        </p>
+
+        <h3>Новые DOM-методы и свойства</h3>
+        <div class="two-column">
+            <div class="mini-card">
+                <h3><code class="inline-code">setProperty</code></h3>
+                <p>
+                    Устанавливает CSS-свойство через JS. Особенно удобно для CSS-переменных, потому что
+                    <code class="inline-code">--face-count</code> нельзя нормально записать через точку.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">setProperty</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>eggTop.style.setProperty("--face-count", faceCount);</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">className</code></h3>
+                <p>
+                    Полностью задает строку классов у элемента. Для нового элемента это нормально,
+                    потому что старых классов у него еще нет.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">className</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>eggTop.className = "egg-top";
+
+// Альтернатива:
+eggTop.classList.add("egg-top");</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">append</code></h3>
+                <p>
+                    Кладет один DOM-элемент внутрь другого, в конец родителя.
+                    Здесь контейнер с гранями кладется внутрь верхней части яйца.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">append</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>eggTop.append(facesContainer);</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">insertBefore</code></h3>
+                <p>
+                    Вставляет новый элемент перед уже существующим элементом внутри одного родителя.
+                    Читается так: "внутри egg вставь eggTop перед eggCenter".
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">insertBefore</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>parent.insertBefore(newElement, existingElement);
+
+egg.insertBefore(eggTop, eggCenter);</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h3>Итоговая логика блока</h3>
+        <ol>
+            <li>Дождаться, пока HTML будет прочитан: <code class="inline-code">DOMContentLoaded</code>.</li>
+            <li>Найти существующие элементы: <code class="inline-code">.egg</code> и <code class="inline-code">.egg-center</code>.</li>
+            <li>Создать <code class="inline-code">.egg-top</code>.</li>
+            <li>Создать <code class="inline-code">.time-ruler-faces-container</code>.</li>
+            <li>Через <code class="inline-code">Array.from</code> сгенерировать 48 HTML-строк.</li>
+            <li>Через <code class="inline-code">join("")</code> склеить строки без запятых.</li>
+            <li>Через <code class="inline-code">innerHTML</code> превратить строку в HTML внутри контейнера.</li>
+            <li>Через <code class="inline-code">append</code> положить контейнер внутрь <code class="inline-code">eggTop</code>.</li>
+            <li>Через <code class="inline-code">insertBefore</code> вставить <code class="inline-code">eggTop</code> перед <code class="inline-code">eggCenter</code>.</li>
+        </ol>
+
+        <h3>Что важно помнить дальше</h3>
+        <ul>
+            <li>SCSS решает задачу стилей, но не генерирует HTML-разметку.</li>
+            <li>Pug мог бы генерировать HTML, но пока его не подключаем, чтобы не усложнять проект вторым препроцессором.</li>
+            <li>Повторяющуюся разметку удобно генерировать через JS, потому что проект учебный и цель - прокачивать JavaScript.</li>
+            <li>Следующий шаг - закончить вставку JS-кода и проверить, что в DOM появилась структура <code class="inline-code">.egg-top</code> с 48 wrapper-элементами.</li>
+        </ul>
+    </section>
+</main>
+
+<script>
+    const copyFallback = (text) => {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        document.body.append(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+    };
+
+    document.querySelectorAll(".code-card").forEach((card) => {
+        const button = card.querySelector(".copy-button");
+        const code = card.querySelector("code");
+
+        if (!button || !code) {
+            return;
+        }
+
+        button.addEventListener("click", async () => {
+            const text = code.innerText;
+
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    copyFallback(text);
+                }
+
+                button.textContent = "Copied";
+            } catch (error) {
+                copyFallback(text);
+                button.textContent = "Copied";
+            }
+
+            window.setTimeout(() => {
+                button.textContent = "Copy";
+            }, 1400);
+        });
+    });
+
+    const navLinks = Array.from(document.querySelectorAll(".note-nav a"));
+
+    navLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+            navLinks.forEach((item) => item.classList.remove("is-active"));
+            link.classList.add("is-active");
+        });
+    });
+</script>
+</body>
+</html>

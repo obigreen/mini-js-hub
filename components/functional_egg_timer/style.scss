@@ -1,3 +1,7 @@
+@use "sass:math";
+$faceCount: 48;
+
+
 .default {
   width: 100%;
 }
@@ -18,6 +22,7 @@
   border-radius: 100% 100% 76% 76% / 118% 118% 80% 80%;
   filter: drop-shadow(0 0px 2px Rgb(0 0 0 / var(--shadow-opacity)));
   cursor: pointer;
+  width: max-content;
 
   .egg-container.active & {
     --shadow-opacity: 0;
@@ -45,8 +50,7 @@
 
 @mixin egg-background {
   background-color: #f4f4f4;
-  background-image: url('https://assets.codepen.io/4175254/final-2.png'),
-  linear-gradient(to right, #e6e6e6, #fff, #e6e6e6),;
+  background-image: url('https://assets.codepen.io/4175254/final-2.png'), linear-gradient(to right, #e6e6e6, #fff, #e6e6e6),;
   background-size: 60px 60px, auto auto;
   background-blend-mode: multiply, normal;
 }
@@ -82,8 +86,8 @@
   }
 }
 
-.time-ruler-faces-container {
-  --initial-rotation: calc(180deg + (360deg / var(--face-count) / 2));
+.time-ruler-numbers-container {
+  --initial-rotation: calc(180deg + (360deg / var(--number-count) / 2));
   --rotation: 0deg;
   display: flex;
   justify-content: center;
@@ -92,7 +96,8 @@
   bottom: 6px;
   transform: rotateY(calc(var(--rotation) + var(--initial-rotation)));
   transform-style: preserve-3d;
-  aspect-ratio: #{1740 / pi()} / 76;
+  //aspect-ratio: #{1740 / pi()} / 76;
+  aspect-ratio: #{math.div(1740, math.$pi)} / 76;
   width: 100%;
   transition: transform .4s;
 
@@ -102,25 +107,29 @@
   }
 }
 
-.time-ruler-face-wrapper {
+.time-ruler-number-wrapper {
   // background-color: red;
   $anti-gap-shift: 3px;
-  --angle: calc(360deg / var(--face-count) * var(--i));
+  --angle: calc(360deg / var(--number-count) * var(--i));
   position: absolute;
-  // transform: rotateY(calc(var(--angle) - 90deg)) translateX(calc(100% * var(--face-count) / #{pi()} / 2 - #{$anti-gap-shift})) rotateY(90deg);
-  transform: rotateY(calc(var(--angle) - 90deg)) translateX(calc(100% / (2 * #{tan(pi() / $face-count)}) - #{$anti-gap-shift})) rotateY(90deg);
+  // transform: rotateY(calc(var(--angle) - 90deg)) translateX(calc(100% * var(--number-count) / #{pi()} / 2 - #{$anti-gap-shift})) rotateY(90deg);
+  //transform: rotateY(calc(var(--angle) - 90deg)) translateX(calc(100% / (2 * #{tan(pi() / $number-count)}) - #{$anti-gap-shift})) rotateY(90deg);
+  transform: rotateY(calc(var(--angle) - 90deg)) translateX(calc(100% / (2 * #{math.tan(math.div(math.$pi, $faceCount))}) - #{$anti-gap-shift})) rotateY(90deg);
   backface-visibility: hidden;
-  // width: calc(100% * #{pi()} / var(--face-count));
-  width: calc(100% * #{sin(pi() / $face-count)});
+  // width: calc(100% * #{pi()} / var(--number-count));
+  //width: calc(100% * #{sin(pi() / $number-count)});
+  width: calc(100% * #{math.sin(math.div(math.$pi, $faceCount))});
   height: 100%;
   overflow: hidden;
 }
 
-.time-ruler-face {
+.time-number-face {
   position: absolute;
   top: 0;
   left: calc(-100% * var(--i));
   height: 100%;
+  width: auto;
+  max-width: none;
   fill: #484848;
   will-change: transform;
 }

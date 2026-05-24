@@ -12,11 +12,13 @@ node -v
 npm -v
 ```
 
-## Work From This Component Folder
+## Work Only From This Component Folder
 
 ```bash
 cd components/functional_egg_timer
 ```
+
+All Sass commands below assume the terminal is already inside `components/functional_egg_timer`.
 
 ## Install Sass Locally For This Component
 
@@ -33,30 +35,14 @@ npx sass --version
 
 ## Compile SCSS Once
 
-Run from `components/functional_egg_timer`:
-
 ```bash
 npx sass style.scss style.css
 ```
 
-Run from project root:
-
-```bash
-npx --prefix components/functional_egg_timer sass components/functional_egg_timer/style.scss components/functional_egg_timer/style.css
-```
-
 ## Watch SCSS Changes
-
-Run from `components/functional_egg_timer`:
 
 ```bash
 npx sass --watch style.scss:style.css
-```
-
-Run from project root:
-
-```bash
-npx --prefix components/functional_egg_timer sass --watch components/functional_egg_timer/style.scss:components/functional_egg_timer/style.css
 ```
 
 Stop watch mode with `Ctrl + C`.
