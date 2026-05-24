@@ -11,6 +11,8 @@
     --green_3: #3fb27b;
 
     --red: #A5260A;
+    --red_2: #a5260a;
+    --red_3: #ff6b4a;
 
     --border: rgba(255, 255, 255, 0.10);
 
@@ -157,8 +159,16 @@ textarea {
     width: 12px;
     height: 12px;
     border-radius: 999px;
+}
+
+.tile_dot[data-ready="true"] {
     background: radial-gradient(circle at 30% 30%, var(--green_3), var(--green_2));
     box-shadow: 0 0 0 4px rgba(21, 121, 77, 0.18);
+}
+
+.tile_dot[data-ready="false"] {
+    background: radial-gradient(circle at 30% 30%, var(--red_3), var(--red_2));
+    box-shadow: 0 0 0 4px rgba(165, 38, 10, 0.18);
 }
 
 .tile_tag {

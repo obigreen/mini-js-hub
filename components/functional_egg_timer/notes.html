@@ -282,7 +282,7 @@
             <h1 class="note-title">Конспект разработки</h1>
             <nav class="note-nav" aria-label="Навигация по шагам">
                 <a href="#step1" class="is-active">Step 1</a>
-                <span>Step 2</span>
+                <a href="#step2">Step 2</a>
                 <span>Step 3</span>
                 <span>Step 4</span>
             </nav>
@@ -290,30 +290,30 @@
     </header>
 
     <section class="note-section" id="step1">
-        <h2>Step 1: SCSS, Pug и генерация разметки через JS</h2>
+        <h2>Step 1: SCSS, Pug и JS-генерация разметки</h2>
         <p>
-            Исходник таймера взят из CodePen Nicolas Jesenberger. Главная цель проекта - учиться JavaScript,
-            но в этом компоненте дополнительно появился SCSS, потому что стили автора написаны не на чистом CSS.
+            Исходник таймера взят из CodePen Nicolas Jesenberger. В CodePen автор использует сразу два
+            препроцессора: SCSS для стилей и Pug для HTML. В проекте оставляем SCSS, а Pug не подключаем:
+            повторяющуюся разметку шкалы создаем через JavaScript.
         </p>
 
         <div class="callout">
-            Важное решение: в проекте используем SCSS для стилей, но не подключаем Pug.
-            Повторяющуюся HTML-разметку линейки генерируем через JavaScript-цикл.
+            Рабочая договоренность по именам в этом проекте: используем <code class="inline-code">number/numbers</code>
+            вместо исходного <code class="inline-code">face/faces</code>, чтобы понятнее читать шкалу как набор числовых сегментов.
         </div>
 
         <h3>Что уже выяснили</h3>
         <ul>
             <li>Браузер напрямую читает <code class="inline-code">index.html</code>, <code class="inline-code">style.css</code> и <code class="inline-code">script.js</code>.</li>
             <li>SCSS браузер напрямую не читает. Его нужно компилировать в обычный CSS.</li>
-            <li>CodePen автора использует не только SCSS, но и Pug для HTML.</li>
-            <li>Pug-строки, вставленные прямо в обычный HTML, не выполняются.</li>
-            <li>Для 48 повторяющихся элементов линейки не пишем HTML руками, а создаем их через JS.</li>
+            <li>Pug-строки из CodePen нельзя вставлять прямо в обычный HTML: браузер их не выполнит.</li>
+            <li>Для 48 повторяющихся сегментов шкалы не пишем HTML руками, а генерируем его через JS.</li>
         </ul>
 
         <h3>SCSS в этом компоненте</h3>
         <p>
             Sass установлен локально внутри папки <code class="inline-code">components/functional_egg_timer</code>.
-            Такая схема подходит, если SCSS нужен только этому компоненту.
+            Все команды ниже выполняются именно из этой папки.
         </p>
 
         <div class="code-card">
@@ -332,71 +332,90 @@ npx sass --watch style.scss:style.css</code></pre>
         </div>
 
         <div class="callout warning">
-            Правило работы: пишем в <code class="inline-code">style.scss</code>, а HTML подключает <code class="inline-code">style.css</code>.
-            После запуска Sass-файл <code class="inline-code">style.css</code> лучше не редактировать руками, потому что он будет перезаписываться.
+            Правило работы: пишем в <code class="inline-code">style.scss</code>, а HTML подключает
+            <code class="inline-code">style.css</code>. После запуска Sass файл <code class="inline-code">style.css</code>
+            лучше не редактировать руками, потому что он будет перезаписываться.
         </div>
 
-        <h3>Почему кусок автора не отрабатывал</h3>
+        <h3>Source map и Git</h3>
         <p>
-            Этот код выглядит как разметка, но это не HTML. Это Pug-синтаксис, который CodePen сначала компилирует в HTML.
+            Sass может создавать <code class="inline-code">style.css.map</code>. Это sourcemap-файл для DevTools:
+            он помогает браузеру связывать скомпилированный CSS с исходным SCSS.
+        </p>
+        <p>
+            Для учебного проекта его можно не хранить в репозитории. Корневой <code class="inline-code">.gitignore</code>
+            работает на весь проект и все вложенные папки, поэтому отдельный <code class="inline-code">.gitignore</code>
+            внутри таймера не нужен.
         </p>
 
         <div class="code-card">
             <div class="code-card-header">
-                <span class="code-card-title">Pug-код из CodePen</span>
+                <span class="code-card-title">Ignore CSS source maps</span>
                 <button class="copy-button" type="button">Copy</button>
             </div>
-            <pre><code>- const faceCount = 48
-.egg-top(style=`--face-count: ${faceCount}`)
-    .time-ruler-faces-container
-        - for (let i = 0; i &lt; faceCount; i++)
-            .time-ruler-face-wrapper(style=`--i: ${i}`)
-                svg.time-ruler-face(xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1740 76", aria-hidden="true")
+            <pre><code># .gitignore
+*.css.map</code></pre>
+        </div>
+
+        <div class="callout warning">
+            Если <code class="inline-code">style.css.map</code> уже был закоммичен, <code class="inline-code">.gitignore</code>
+            сам его из Git не удалит. Нужно один раз убрать файл из индекса через <code class="inline-code">git rm --cached</code>.
+        </div>
+
+        <h3>Почему Pug-блок автора не работал</h3>
+        <p>
+            В CodePen этот блок сначала компилируется Pug-ом в обычный HTML. В нашем статическом
+            <code class="inline-code">index.html</code> такой синтаксис не выполняется.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Pug-код из CodePen, переименованный под number/numbers</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>- const numberCount = 48
+.egg-top(style=`--number-count: ${numberCount}`)
+    .time-ruler-numbers-container
+        - for (let i = 0; i &lt; numberCount; i++)
+            .time-ruler-number-wrapper(style=`--i: ${i}`)
+                svg.time-number-face(xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1740 76", aria-hidden="true")
                     use(href="#time-ruler")</code></pre>
         </div>
 
+        <h3>Какую структуру должен получить браузер</h3>
         <p>
-            Pug работает как препроцессор для HTML:
-        </p>
-        <ul>
-            <li><code class="inline-code">.egg-top</code> превращается в <code class="inline-code">&lt;div class="egg-top"&gt;</code>.</li>
-            <li><code class="inline-code">- const faceCount = 48</code> выполняется на этапе компиляции Pug.</li>
-            <li><code class="inline-code">for</code> в Pug генерирует 48 HTML-блоков до загрузки страницы в браузере.</li>
-        </ul>
-
-        <h3>Что должен получить браузер</h3>
-        <p>
-            В обычном HTML в итоге должна появиться такая структура. Внутри контейнера должно быть 48
-            <code class="inline-code">.time-ruler-face-wrapper</code> с индексами от <code class="inline-code">0</code> до <code class="inline-code">47</code>.
+            В обычном DOM должна появиться такая вложенность. Внутри контейнера создаются 48
+            <code class="inline-code">.time-ruler-number-wrapper</code> с индексами от <code class="inline-code">0</code>
+            до <code class="inline-code">47</code>.
         </p>
 
         <div class="code-card">
             <div class="code-card-header">
-                <span class="code-card-title">Итоговая HTML-идея</span>
+                <span class="code-card-title">Итоговая DOM-структура</span>
                 <button class="copy-button" type="button">Copy</button>
             </div>
-            <pre><code>&lt;div class="egg-top" style="--face-count: 48"&gt;
-    &lt;div class="time-ruler-faces-container"&gt;
-        &lt;div class="time-ruler-face-wrapper" style="--i: 0"&gt;...&lt;/div&gt;
-        &lt;div class="time-ruler-face-wrapper" style="--i: 1"&gt;...&lt;/div&gt;
-        &lt;div class="time-ruler-face-wrapper" style="--i: 2"&gt;...&lt;/div&gt;
+            <pre><code>&lt;div class="egg-top" style="--number-count: 48"&gt;
+    &lt;div class="time-ruler-numbers-container"&gt;
+        &lt;div class="time-ruler-number-wrapper" style="--i: 0"&gt;...&lt;/div&gt;
+        &lt;div class="time-ruler-number-wrapper" style="--i: 1"&gt;...&lt;/div&gt;
+        &lt;div class="time-ruler-number-wrapper" style="--i: 2"&gt;...&lt;/div&gt;
     &lt;/div&gt;
 &lt;/div&gt;</code></pre>
         </div>
 
         <h3>JS-аналог Pug-цикла</h3>
         <p>
-            Вместо Pug используем обычный JavaScript: создаем верх яйца, создаем контейнер линейки,
-            генерируем 48 строк HTML и вставляем их в DOM.
+            JS здесь не отвечает за 3D-эффект. Он только создает элементы и прокидывает числовые значения
+            в CSS через custom properties.
         </p>
 
         <div class="code-card">
             <div class="code-card-header">
-                <span class="code-card-title">Код генерации разметки</span>
+                <span class="code-card-title">Базовая генерация разметки</span>
                 <button class="copy-button" type="button">Copy</button>
             </div>
             <pre><code>document.addEventListener("DOMContentLoaded", () =&gt; {
-    const faceCount = 48;
+    const numberCount = 48;
 
     const egg = document.querySelector(".egg");
     const eggCenter = document.querySelector(".egg-center");
@@ -407,172 +426,393 @@ npx sass --watch style.scss:style.css</code></pre>
 
     const eggTop = document.createElement("div");
     eggTop.className = "egg-top";
-    eggTop.style.setProperty("--face-count", faceCount);
+    eggTop.style.setProperty("--number-count", numberCount);
 
-    const facesContainer = document.createElement("div");
-    facesContainer.className = "time-ruler-faces-container";
+    const numbersContainer = document.createElement("div");
+    numbersContainer.className = "time-ruler-numbers-container";
 
-    const facesHtml = Array.from({ length: faceCount }, (_, index) =&gt; {
+    const numberHtml = Array.from({ length: numberCount }, (_, index) =&gt; {
         return `
-            &lt;div class="time-ruler-face-wrapper" style="--i: ${index}"&gt;
-                &lt;svg class="time-ruler-face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1740 76" aria-hidden="true"&gt;
+            &lt;div class="time-ruler-number-wrapper" style="--i: ${index}"&gt;
+                &lt;svg class="time-number-face" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1740 76" aria-hidden="true"&gt;
                     &lt;use href="#time-ruler"&gt;&lt;/use&gt;
                 &lt;/svg&gt;
             &lt;/div&gt;
         `;
     });
 
-    facesContainer.innerHTML = facesHtml.join("");
-
-    eggTop.append(facesContainer);
+    numbersContainer.innerHTML = numberHtml.join("");
+    eggTop.append(numbersContainer);
     egg.insertBefore(eggTop, eggCenter);
 });</code></pre>
         </div>
 
-        <h3>Разбор <code class="inline-code">Array.from</code></h3>
+        <h3>Итог Step 1</h3>
+        <ol>
+            <li>SCSS оставляем как учебный слой для стилей.</li>
+            <li>Pug не подключаем, потому что это был бы второй препроцессор для HTML.</li>
+            <li>Повторяющуюся разметку шкалы создаем через JavaScript.</li>
+            <li>В DOM должна появиться структура <code class="inline-code">egg-top -> numbers-container -> 48 wrappers -> svg</code>.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step2">
+        <h2>Step 2: Семантика SCSS, CSS-переменные и геометрия шкалы</h2>
         <p>
-            Строка ниже создает массив из 48 строк HTML. Название <code class="inline-code">facesHtml</code>
-            лучше читать как "HTML для всех граней".
+            Этот шаг начался после паузы в проекте: стили не отображались, Sass записал ошибку прямо в
+            <code class="inline-code">style.css</code>, а после компиляции стало видно, что шкала работает не как в CodePen.
+            Разбор ниже фиксирует не только исправления, но и механику, почему этот таймер интересен.
+        </p>
+
+        <div class="callout">
+            Таймер логически простой, а сложность компонента в другом: JS создает 48 DOM-сегментов,
+            SCSS считает геометрию, а CSS раскладывает куски SVG по 3D-цилиндру.
+        </div>
+
+        <h3>Проблемы компиляции Sass</h3>
+        <p>
+            Первая поломка выглядела как отсутствие стилей, но на деле <code class="inline-code">style.css</code>
+            содержал CSS с текстом ошибки Sass через <code class="inline-code">body::before</code>.
         </p>
 
         <div class="code-card">
             <div class="code-card-header">
-                <span class="code-card-title">Array.from</span>
+                <span class="code-card-title">Типичные Sass-ошибки из этого этапа</span>
                 <button class="copy-button" type="button">Copy</button>
             </div>
-            <pre><code>const facesHtml = Array.from({ length: faceCount }, (_, index) =&gt; {
+            <pre><code>Error: Undefined variable.
+$face-count
+
+Error: Only 1 argument allowed, but 2 were passed.
+math.sin(math.$pi, $faceCount)
+
+Error: Missing argument $number2.
+math.div((math.$pi, $faceCount))</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">$faceCount</code> или <code class="inline-code">$numberCount</code> - SCSS-переменная, она должна быть объявлена до использования.</li>
+            <li><code class="inline-code">math.sin()</code> принимает один аргумент: уже готовое число или выражение.</li>
+            <li><code class="inline-code">math.div()</code> принимает два отдельных аргумента: <code class="inline-code">math.div(math.$pi, $faceCount)</code>.</li>
+            <li>Запись <code class="inline-code">math.div((math.$pi, $faceCount))</code> ошибочна: внутренние скобки превращают два значения в один список.</li>
+        </ul>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Правильный Sass-модуль math</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>@use "sass:math";
+
+$faceCount: 48;
+
+math.sin(math.div(math.$pi, $faceCount));
+math.tan(math.div(math.$pi, $faceCount));</code></pre>
+        </div>
+
+        <h3>Три слоя переменных</h3>
+        <p>
+            Здесь важно не смешивать JS, CSS и SCSS. Они живут в разное время.
+        </p>
+
+        <div class="two-column">
+            <div class="mini-card">
+                <h3>JS-время</h3>
+                <p>
+                    <code class="inline-code">numberCount</code> и <code class="inline-code">index</code>
+                    существуют во время работы скрипта. JS создает элементы и записывает inline CSS-переменные.
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3>CSS-время</h3>
+                <p>
+                    <code class="inline-code">--number-count</code> и <code class="inline-code">--i</code>
+                    читаются браузером в <code class="inline-code">var(...)</code> и <code class="inline-code">calc(...)</code>.
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3>SCSS-время</h3>
+                <p>
+                    <code class="inline-code">$faceCount</code> нужен Sass при компиляции. Sass заранее считает
+                    <code class="inline-code">sin/tan</code> и пишет готовые числа в CSS.
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3>Нельзя смешивать</h3>
+                <p>
+                    Sass не может взять значение из <code class="inline-code">var(--number-count)</code>, потому что
+                    CSS-переменная появится только в браузере, уже после компиляции.
+                </p>
+            </div>
+        </div>
+
+        <h3>Подробно про <code class="inline-code">Array.from</code></h3>
+        <p>
+            Строка ниже создает массив из 48 строк HTML. Источник массива - объект с полем
+            <code class="inline-code">length</code>, а второй аргумент - функция для каждого будущего элемента.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Array.from structure</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const numberHtml = Array.from({ length: numberCount }, (_, index) =&gt; {
     return `...`;
 });</code></pre>
         </div>
 
         <ul>
-            <li><code class="inline-code">{ length: faceCount }</code> - объект. Если <code class="inline-code">faceCount = 48</code>, то это как <code class="inline-code">{ length: 48 }</code>.</li>
-            <li><code class="inline-code">Array.from(...)</code> создает массив нужной длины.</li>
-            <li>Вторая часть <code class="inline-code">(_, index) =&gt; { ... }</code> запускается для каждого элемента массива.</li>
-            <li><code class="inline-code">index</code> - номер текущего прохода: <code class="inline-code">0, 1, 2 ... 47</code>.</li>
-            <li><code class="inline-code">_</code> - обычное имя параметра. Его используют как заглушку, когда первый аргумент не нужен.</li>
+            <li><code class="inline-code">{ length: numberCount }</code> - объект. Если <code class="inline-code">numberCount = 48</code>, то это как <code class="inline-code">{ length: 48 }</code>.</li>
+            <li><code class="inline-code">Array.from(...)</code> создает массив длиной 48.</li>
+            <li>Callback получает два стандартных аргумента: <code class="inline-code">(currentValue, index)</code>.</li>
+            <li>В этом случае <code class="inline-code">currentValue</code> будет <code class="inline-code">undefined</code>, потому что массив создается только по длине.</li>
+            <li><code class="inline-code">_</code> - обычное имя параметра, не магия языка. Его используют как знак "этот аргумент не нужен".</li>
+            <li><code class="inline-code">index</code> - второй параметр callback-а. JS передает туда индекс: <code class="inline-code">0, 1, 2 ... 47</code>.</li>
         </ul>
 
-        <div class="callout">
-            В callback у <code class="inline-code">Array.from</code> обычно доступны два значения:
-            <code class="inline-code">(currentValue, index)</code>. Здесь <code class="inline-code">currentValue</code>
-            не нужен, поэтому вместо него написан <code class="inline-code">_</code>.
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Имена параметров можно менять</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>Array.from({ length: 3 }, (value, index) =&gt; {
+    console.log(value, index);
+});
+// undefined 0
+// undefined 1
+// undefined 2
+
+Array.from({ length: 3 }, (_, currentIndex) =&gt; {
+    return currentIndex;
+});
+// 0, 1, 2</code></pre>
         </div>
 
-        <h3>Разбор <code class="inline-code">join("")</code></h3>
+        <h3>Зачем нужен <code class="inline-code">--i</code></h3>
         <p>
-            После <code class="inline-code">Array.from</code> получается массив строк, а не один HTML.
-            Метод <code class="inline-code">join("")</code> склеивает все строки массива в одну большую строку.
+            Каждый wrapper получает свой номер в inline style. Потом CSS использует этот номер для угла
+            и для выбора своего фрагмента длинной SVG-линейки.
         </p>
 
         <div class="code-card">
             <div class="code-card-header">
-                <span class="code-card-title">join без запятых</span>
+                <span class="code-card-title">Индекс сегмента</span>
                 <button class="copy-button" type="button">Copy</button>
             </div>
-            <pre><code>const parts = ["&lt;div&gt;0&lt;/div&gt;", "&lt;div&gt;1&lt;/div&gt;", "&lt;div&gt;2&lt;/div&gt;"];
+            <pre><code>&lt;div class="time-ruler-number-wrapper" style="--i: 0"&gt;...&lt;/div&gt;
+&lt;div class="time-ruler-number-wrapper" style="--i: 1"&gt;...&lt;/div&gt;
+&lt;div class="time-ruler-number-wrapper" style="--i: 2"&gt;...&lt;/div&gt;</code></pre>
+        </div>
 
-parts.join("");
-// "&lt;div&gt;0&lt;/div&gt;&lt;div&gt;1&lt;/div&gt;&lt;div&gt;2&lt;/div&gt;"
+        <h3>Почему угол умножается на <code class="inline-code">--i</code></h3>
+        <p>
+            Контейнер содержит 48 сегментов. Полный круг - <code class="inline-code">360deg</code>.
+            Шаг между соседними сегментами:
+        </p>
 
-parts.join();
-// "&lt;div&gt;0&lt;/div&gt;,&lt;div&gt;1&lt;/div&gt;,&lt;div&gt;2&lt;/div&gt;"</code></pre>
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Угол каждого сегмента</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>--angle: calc(360deg / var(--number-count) * var(--i));
+
+360deg / 48 = 7.5deg
+
+i = 0  -> 7.5deg * 0  = 0deg
+i = 1  -> 7.5deg * 1  = 7.5deg
+i = 2  -> 7.5deg * 2  = 15deg
+i = 47 -> 7.5deg * 47 = 352.5deg</code></pre>
         </div>
 
         <p>
-            Важно: <code class="inline-code">join("")</code> не делает один HTML-блок из 48 блоков.
-            Он делает одну текстовую HTML-строку. Потом <code class="inline-code">innerHTML</code>
-            говорит браузеру разобрать эту строку как HTML.
+            Без умножения на <code class="inline-code">var(--i)</code> все сегменты получили бы один и тот же угол
+            и легли бы в одно место.
         </p>
 
-        <h3>Новые DOM-методы и свойства</h3>
-        <div class="two-column">
-            <div class="mini-card">
-                <h3><code class="inline-code">setProperty</code></h3>
-                <p>
-                    Устанавливает CSS-свойство через JS. Особенно удобно для CSS-переменных, потому что
-                    <code class="inline-code">--face-count</code> нельзя нормально записать через точку.
-                </p>
-                <div class="code-card">
-                    <div class="code-card-header">
-                        <span class="code-card-title">setProperty</span>
-                        <button class="copy-button" type="button">Copy</button>
-                    </div>
-                    <pre><code>eggTop.style.setProperty("--face-count", faceCount);</code></pre>
-                </div>
+        <h3>Одна длинная SVG и 48 маленьких окон</h3>
+        <p>
+            Шкала не состоит из 48 разных картинок. Есть одна длинная SVG-линейка
+            <code class="inline-code">#time-ruler</code>, а каждый wrapper показывает только свой кусок.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Wrapper как окно</span>
+                <button class="copy-button" type="button">Copy</button>
             </div>
+            <pre><code>.time-ruler-number-wrapper {
+    width: ...;
+    overflow: hidden;
+}
 
-            <div class="mini-card">
-                <h3><code class="inline-code">className</code></h3>
-                <p>
-                    Полностью задает строку классов у элемента. Для нового элемента это нормально,
-                    потому что старых классов у него еще нет.
-                </p>
-                <div class="code-card">
-                    <div class="code-card-header">
-                        <span class="code-card-title">className</span>
-                        <button class="copy-button" type="button">Copy</button>
-                    </div>
-                    <pre><code>eggTop.className = "egg-top";
-
-// Альтернатива:
-eggTop.classList.add("egg-top");</code></pre>
-                </div>
-            </div>
-
-            <div class="mini-card">
-                <h3><code class="inline-code">append</code></h3>
-                <p>
-                    Кладет один DOM-элемент внутрь другого, в конец родителя.
-                    Здесь контейнер с гранями кладется внутрь верхней части яйца.
-                </p>
-                <div class="code-card">
-                    <div class="code-card-header">
-                        <span class="code-card-title">append</span>
-                        <button class="copy-button" type="button">Copy</button>
-                    </div>
-                    <pre><code>eggTop.append(facesContainer);</code></pre>
-                </div>
-            </div>
-
-            <div class="mini-card">
-                <h3><code class="inline-code">insertBefore</code></h3>
-                <p>
-                    Вставляет новый элемент перед уже существующим элементом внутри одного родителя.
-                    Читается так: "внутри egg вставь eggTop перед eggCenter".
-                </p>
-                <div class="code-card">
-                    <div class="code-card-header">
-                        <span class="code-card-title">insertBefore</span>
-                        <button class="copy-button" type="button">Copy</button>
-                    </div>
-                    <pre><code>parent.insertBefore(newElement, existingElement);
-
-egg.insertBefore(eggTop, eggCenter);</code></pre>
-                </div>
-            </div>
+.time-number-face {
+    left: calc(-100% * var(--i));
+    width: auto;
+    max-width: none;
+}</code></pre>
         </div>
 
-        <h3>Итоговая логика блока</h3>
-        <ol>
-            <li>Дождаться, пока HTML будет прочитан: <code class="inline-code">DOMContentLoaded</code>.</li>
-            <li>Найти существующие элементы: <code class="inline-code">.egg</code> и <code class="inline-code">.egg-center</code>.</li>
-            <li>Создать <code class="inline-code">.egg-top</code>.</li>
-            <li>Создать <code class="inline-code">.time-ruler-faces-container</code>.</li>
-            <li>Через <code class="inline-code">Array.from</code> сгенерировать 48 HTML-строк.</li>
-            <li>Через <code class="inline-code">join("")</code> склеить строки без запятых.</li>
-            <li>Через <code class="inline-code">innerHTML</code> превратить строку в HTML внутри контейнера.</li>
-            <li>Через <code class="inline-code">append</code> положить контейнер внутрь <code class="inline-code">eggTop</code>.</li>
-            <li>Через <code class="inline-code">insertBefore</code> вставить <code class="inline-code">eggTop</code> перед <code class="inline-code">eggCenter</code>.</li>
-        </ol>
-
-        <h3>Что важно помнить дальше</h3>
         <ul>
-            <li>SCSS решает задачу стилей, но не генерирует HTML-разметку.</li>
-            <li>Pug мог бы генерировать HTML, но пока его не подключаем, чтобы не усложнять проект вторым препроцессором.</li>
-            <li>Повторяющуюся разметку удобно генерировать через JS, потому что проект учебный и цель - прокачивать JavaScript.</li>
-            <li>Следующий шаг - закончить вставку JS-кода и проверить, что в DOM появилась структура <code class="inline-code">.egg-top</code> с 48 wrapper-элементами.</li>
+            <li><code class="inline-code">overflow: hidden</code> превращает wrapper в маленькое окно.</li>
+            <li><code class="inline-code">left: 0</code> показывает первый кусок SVG.</li>
+            <li><code class="inline-code">left: -100%</code> показывает следующий кусок.</li>
+            <li><code class="inline-code">left: -200%</code> показывает третий кусок.</li>
+            <li><code class="inline-code">max-width: none</code> нужен, потому что общий CSS проекта сжимает SVG через <code class="inline-code">svg { max-width: 100%; }</code>.</li>
         </ul>
+
+        <h3>Почему были длинная середина и широкая кнопка</h3>
+        <p>
+            Если <code class="inline-code">.egg</code> или <code class="inline-code">.egg-container</code> остаются
+            блочными элементами на всю ширину карточки, то <code class="inline-code">.egg-center</code> с
+            <code class="inline-code">width: calc(100% - 24px)</code> тоже растягивается на всю карточку.
+            Кнопка с <code class="inline-code">width: 100%</code> ведет себя так же.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Ограничение ширины яйца</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.egg-container {
+    width: 274px;
+    margin: 0 auto;
+}
+
+.egg {
+    width: 274px;
+}</code></pre>
+        </div>
+
+        <h3>Геометрия: ширина грани</h3>
+        <p>
+            Сегменты шкалы раскладываются как стороны правильного многоугольника. При 48 сторонах он почти
+            выглядит как цилиндр.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Ширина одного сегмента</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>width: calc(100% * #{math.sin(math.div(math.$pi, $faceCount))});</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">math.$pi</code> - число π, примерно <code class="inline-code">3.14159</code>.</li>
+            <li><code class="inline-code">math.div(math.$pi, $faceCount)</code> при 48 сегментах дает <code class="inline-code">π / 48</code>.</li>
+            <li><code class="inline-code">sin(π / 48)</code> примерно равен <code class="inline-code">0.0654</code>.</li>
+            <li>Итог для CSS: <code class="inline-code">width: calc(100% * 0.0654)</code>.</li>
+        </ul>
+
+        <p>
+            В геометрии правильного многоугольника ширина стороны считается через синус половины угла сектора.
+            Здесь <code class="inline-code">100%</code> можно воспринимать как диаметр шкалы, а результат - как ширину одной грани.
+        </p>
+
+        <h3>Геометрия: расстояние от центра</h3>
+        <p>
+            Второй расчет отвечает за то, насколько далеко от центра нужно отодвинуть каждый сегмент,
+            чтобы все 48 кусочков собрались в цилиндр.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Отступ от центра цилиндра</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>translateX(
+    calc(100% / (2 * #{math.tan(math.div(math.$pi, $faceCount))}) - #{$anti-gap-shift})
+)</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">tan(π / 48)</code> примерно равен <code class="inline-code">0.0655</code>.</li>
+            <li><code class="inline-code">100%</code> внутри <code class="inline-code">transform</code> считается от размера самого wrapper-а.</li>
+            <li>Формула похожа на <code class="inline-code">apothem = side / (2 * tan(π / N))</code>.</li>
+            <li><code class="inline-code">$anti-gap-shift</code> чуть сдвигает грань внутрь, чтобы между сегментами не было щелей.</li>
+        </ul>
+
+        <div class="callout">
+            Коротко: <code class="inline-code">sin</code> отвечает за ширину грани, а
+            <code class="inline-code">tan</code> отвечает за расстояние грани от центра.
+        </div>
+
+        <h3>3D-контейнер и transform</h3>
+        <p>
+            Контейнер шкалы не является яйцом. Это держатель для 48 граней. Он сохраняет дочерние элементы
+            в 3D-пространстве.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">3D-контейнер</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.time-ruler-numbers-container {
+    transform-style: preserve-3d;
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">preserve-3d</code> говорит браузеру: не сплющивай детей контейнера в одну
+            2D-плоскость, оставь их повороты и смещения в 3D.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Раскладка одной грани</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>transform:
+    rotateY(calc(var(--angle) - 90deg))
+    translateX(...)
+    rotateY(90deg);</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">rotateY(calc(var(--angle) - 90deg))</code> поворачивает систему координат для конкретной грани.</li>
+            <li><code class="inline-code">translateX(...)</code> отодвигает грань от центра цилиндра.</li>
+            <li><code class="inline-code">rotateY(90deg)</code> разворачивает саму плоскость грани лицом наружу.</li>
+            <li>Порядок transform-функций важен: если поменять их местами, элемент окажется в другом месте.</li>
+        </ul>
+
+        <h3>Куб и цилиндр - одна идея</h3>
+        <p>
+            Через 3D transforms можно сделать и куб, и цилиндр. Куб - это 6 граней, цилиндр здесь - 48 граней.
+            Чем больше граней, тем круглее выглядит форма.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Модель в одну строку</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>6 граней  -> куб / шестигранник
+48 граней -> почти круглый цилиндр</code></pre>
+        </div>
+
+        <h3>Что проверять в DevTools</h3>
+        <ul>
+            <li>Отключить <code class="inline-code">overflow: hidden</code> - станет видно длинную SVG внутри каждого окна.</li>
+            <li>Отключить <code class="inline-code">left: calc(-100% * var(--i))</code> - все окна начнут показывать один и тот же кусок SVG.</li>
+            <li>Отключить <code class="inline-code">transform</code> у wrapper-а - грани перестанут собираться в цилиндр.</li>
+            <li>Проверить DOM: внутри <code class="inline-code">.time-ruler-numbers-container</code> должно быть 48 <code class="inline-code">.time-ruler-number-wrapper</code>.</li>
+        </ul>
+
+        <h3>Итог Step 2</h3>
+        <ol>
+            <li>JS создает 48 сегментов и каждому задает <code class="inline-code">--i</code>.</li>
+            <li>CSS по <code class="inline-code">--i</code> считает угол каждого сегмента.</li>
+            <li>Каждый wrapper показывает свой кусок длинной SVG-линейки.</li>
+            <li>SCSS через <code class="inline-code">sin/tan</code> считает размеры и радиус раскладки.</li>
+            <li>3D transform раскладывает сегменты по цилиндру.</li>
+            <li>Будущее вращение шкалы будет происходить не через пересоздание DOM, а через изменение <code class="inline-code">--rotation</code>.</li>
+        </ol>
     </section>
 </main>
 
