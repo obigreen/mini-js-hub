@@ -16,3 +16,6 @@ node_modules/
 dist/
 build/
 .cache/
+
+# Sass source maps
+*.css.map
