@@ -9,16 +9,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerButton = document.querySelector(".timer-button");
 
 
-
-
     if (!egg || !eggCenter || !eggContainer || !timeContainer || !timerButton) {
-        return null;
+        return;
     }
+
+    // Сколько секунд выбрал пользователь:
+    let selectedSeconds = 0;
+    // Сколько секунд осталось до конца:
+    let remainingSeconds = 0;
+    // ID запущенного интервала.
+    let timerId = null;
+    // Флаг: таймер сейчас запущен или нет:
+    let isRunning = false;
+
+
+    function formatTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        const paddedSeconds = String(seconds).padStart(2, "0");
+
+        return`${minutes}:${paddedSeconds}`;
+    }
+
+    timeContainer.textContent = formatTime(remainingSeconds);
+
 
 
     const eggTop = document.createElement("div");
     eggTop.className = "egg-top";
-    eggTop.style.setProperty("--number-count", numberCount);
+    eggTop.style.setProperty("--number-count", String(numberCount));
     const numbersContainer = document.createElement("div");
     numbersContainer.className = "time-ruler-numbers-container";
 
