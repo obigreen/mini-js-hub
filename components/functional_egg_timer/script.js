@@ -66,6 +66,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     function startTimer() {
+
+        if (remainingSeconds === 0) {
+            remainingSeconds = selectedSeconds;
+            updateTimeDisplay();
+        }
+
+        if (remainingSeconds === 0 || timerId !== null) {
+            return;
+        }
+
         isRunning = true;
         timerButton.textContent = "Stop";
         timerButton.classList.add("stop");
@@ -80,20 +90,27 @@ document.addEventListener('DOMContentLoaded', () => {
         timerButton.textContent = "Start";
         timerButton.classList.remove("stop");
         clearInterval(timerId);
+        timerId = null;
     }
-
 
     function tickTimer() {
         if (remainingSeconds === 0) {
-            stopTimer();
-            const logText = "CALL!!!";
-            const callDate = new Date();
-            console.log(`${logText} ${callDate.toLocaleTimeString()}`);
             return;
         }
 
         remainingSeconds = remainingSeconds - 1;
         updateTimeDisplay();
+
+        if (remainingSeconds === 0) {
+            finishTimer();
+        }
+    }
+
+    function finishTimer() {
+        stopTimer();
+        const logText = "CALL!!!";
+        const callDate = new Date();
+        console.log(`${logText} ${callDate.toLocaleTimeString()}`);
     }
 
 
@@ -122,3 +139,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // вопросы по устройству языка js
 // 1 - textContent, padStart, insertBefore, Math.floor
+// 2 - рекурсия на примере stopTimer() -> finishTimer() -> stopTimer() -> finishTimer() -> ...
