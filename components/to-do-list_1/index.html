@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>To-Do List 1</title>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <link rel="stylesheet" href="./style.css"/>
+</head>
+
+<body>
+<main class="page">
+    <div class="global-container">
+        <div class="topbar">
+            <a class="back" href="../../index.html" aria-label="Вернуться на главную">
+                <span aria-hidden="true">🏃🚶🧎</span>
+                <span>Back</span>
+            </a>
+        </div>
+
+        <h1 class="h1">To-Do List 1</h1>
+        <p class="p-muted">Учебный todo-list: переводим Pug/Sass/jQuery-компонент в HTML, SCSS и jQuery</p>
+
+        <section class="card default">
+
+            <section class="todo" aria-label="To-do list">
+                <div class="todo-header">
+                    <div class="todo-form">
+                        <input class="todo-input" type="text" name="todo" id="todoInput" placeholder="Write something here...">
+                        <button class="todo-add" id="todoAdd" type="button" aria-label="Add task">✚</button>
+                    </div>
+                </div>
+
+                <ul class="todo-list" id="todoList">
+                    <li class="todo-item">
+                        <span class="todo-text">Do the laundry</span>
+                        <button class="todo-check" type="button" aria-label="Mark task as done">✔</button>
+                        <button class="todo-delete" type="button" aria-label="Delete task">✖</button>
+                    </li>
+                    <li class="todo-item">
+                        <span class="todo-text">Go to the supermarket</span>
+                        <button class="todo-check" type="button" aria-label="Mark task as done">✔</button>
+                        <button class="todo-delete" type="button" aria-label="Delete task">✖</button>
+                    </li>
+                    <li class="todo-item">
+                        <span class="todo-text">Nothing to do</span>
+                        <button class="todo-check" type="button" aria-label="Mark task as done">✔</button>
+                        <button class="todo-delete" type="button" aria-label="Delete task">✖</button>
+                    </li>
+                </ul>
+            </section>
+        </section>
+    </div>
+    <footer class="footer">
+        <div class="global-container footer_inner">
+            <div class="credit">
+            <span class="source_logo" aria-hidden="true">
+                <!-- Cube mark (SVG) -->
+                <svg class="source_logoSvg" width="60" height="60" viewBox="0 0 24 24" fill="none"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2.4 3.2 7.5V16.5L12 21.6l8.8-5.1V7.5L12 2.4Z"
+                          stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                    <path d="M3.2 7.5 12 12.6l8.8-5.1" stroke="currentColor" stroke-width="1.2"
+                          stroke-linejoin="round"/>
+                    <path d="M12 12.6V21.6" stroke="currentColor" stroke-width="1.2"
+                          stroke-linecap="round"/>
+                    <path d="M12 2.4v10.2" stroke="currentColor" stroke-width="1.1"
+                          stroke-linecap="round" opacity="0.65"/>
+                </svg>
+            </span>
+
+                <div class="source_text">
+                    <div class="source_title"><span class="source_info_title">Project name:</span> To-Do List
+                    </div>
+                    <div class="source_meta">
+                        <span class="source_author"><span class="source_info_title">Author:</span> <a target="_blank"
+                                                                                                      href="https://codepen.io/lockingdong">Lockingdong</a></span>
+                    </div>
+                    <div>
+                        <a class="source_link"
+                           href="https://codepen.io/lockingdong/pen/qNeyVL"
+                           target="_blank"
+                           rel="noreferrer noopener"
+                           aria-label="Открыть источник кода">
+                        <span class="source_linkIcon" aria-hidden="true">
+                            <!-- Link icon (SVG) -->
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10.6 13.4a4.3 4.3 0 0 1 0-6.1l1.6-1.6a4.3 4.3 0 0 1 6.1 6.1l-1.1 1.1"
+                                      stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                                <path d="M13.4 10.6a4.3 4.3 0 0 1 0 6.1l-1.6 1.6a4.3 4.3 0 0 1-6.1-6.1l1.1-1.1"
+                                      stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                            <span class="source_linkText">Source</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+</main>
+
+<script src="./node_modules/jquery/dist/jquery.min.js"></script>
+<script src="./script.js"></script>
+</body>
+</html>
+
+
+
+<!--todo - check what it is this canvas(Pug)-->
+<!--раскрыть тему -webkit-transition-duration: 0.4s и аналоги-->

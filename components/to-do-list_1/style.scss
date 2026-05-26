@@ -1,0 +1,41 @@
+.default {
+    width: 100%;
+}
+
+.default_line {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.default_line + .default_line {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.70);
+}
+
+$todo-line-height: 60px;
+$todo-bg: #2C3E50;
+$todo-accent: #E74C3C;
+$todo-text: #ECF0F1;
+
+
+.todo {
+    width: min(100%, 400px);
+    margin: 0 auto;
+}
+
+.todo-header {
+    width: 100%;
+}
+
+.todo-form {
+    display: flex;
+    height: $todo-line-height;
+}
+
+.todo-input {
+    flex: 1;
+}
+
+.todo-add {
+    flex: 0 0 60px;
+}
