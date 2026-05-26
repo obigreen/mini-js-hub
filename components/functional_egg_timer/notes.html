@@ -283,7 +283,7 @@
             <nav class="note-nav" aria-label="Навигация по шагам">
                 <a href="#step1" class="is-active">Step 1</a>
                 <a href="#step2">Step 2</a>
-                <span>Step 3</span>
+                <a href="#step3">Step 3</a>
                 <span>Step 4</span>
             </nav>
         </div>
@@ -812,6 +812,340 @@ i = 47 -> 7.5deg * 47 = 352.5deg</code></pre>
             <li>SCSS через <code class="inline-code">sin/tan</code> считает размеры и радиус раскладки.</li>
             <li>3D transform раскладывает сегменты по цилиндру.</li>
             <li>Будущее вращение шкалы будет происходить не через пересоздание DOM, а через изменение <code class="inline-code">--rotation</code>.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step3">
+        <h2>Step 3: Базовая JS-логика таймера</h2>
+        <p>
+            После визуальной части и 3D-шкалы перешли к логике таймера. Главная цель этого этапа:
+            не сразу написать весь таймер одним куском, а собрать его из маленьких понятных функций.
+            В конце этапа таймер уже запускается, тикает каждую секунду, доходит до нуля и останавливается.
+        </p>
+
+        <div class="callout">
+            В коде для практики используем формат <code class="inline-code">TASK 01</code>,
+            <code class="inline-code">TASK 02</code> и так далее. Для творческих ответвлений используем
+            <code class="inline-code">EXTRATASK</code>: маленький эксперимент, после которого возвращаемся
+            к основному маршруту.
+        </div>
+
+        <h3>С чего стартовала логика</h3>
+        <p>
+            Сначала JS должен был получить ссылки на элементы, которыми он будет управлять:
+            контейнер таймера, яйцо, место вывода времени и кнопку.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">DOM-ссылки</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const egg = document.querySelector(".egg");
+const eggCenter = document.querySelector(".egg-center");
+const eggContainer = document.querySelector(".egg-container");
+const timeContainer = document.querySelector(".time-container");
+const timerButton = document.querySelector(".timer-button");</code></pre>
+        </div>
+
+        <p>
+            После этого добавили защитную проверку. Если какой-то важный элемент не найден, выполнение
+            останавливается через <code class="inline-code">return</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Guard-проверка</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>if (!egg || !eggCenter || !eggContainer || !timeContainer || !timerButton) {
+    return;
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">return;</code> здесь нужен не для возврата значения, а для остановки функции.</li>
+            <li><code class="inline-code">return null;</code> тоже остановил бы функцию, но значение <code class="inline-code">null</code> никто не использует.</li>
+            <li><code class="inline-code">querySelector(...)</code> возвращает один первый элемент или <code class="inline-code">null</code>.</li>
+            <li><code class="inline-code">querySelectorAll(...)</code> возвращает список элементов, поэтому у списка нельзя напрямую менять <code class="inline-code">textContent</code>.</li>
+        </ul>
+
+        <h3>Состояние таймера</h3>
+        <p>
+            Для логики завели переменные состояния. Это данные, которые JS будет помнить и менять во время работы.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">State-переменные</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>let selectedSeconds = 0;
+let remainingSeconds = 0;
+let timerId = null;
+let isRunning = false;</code></pre>
+        </div>
+
+        <div class="two-column">
+            <div class="mini-card">
+                <h3><code class="inline-code">selectedSeconds</code></h3>
+                <p>
+                    Сколько секунд выбрал пользователь. Это значение отвечает за возможность старта:
+                    если выбрано <code class="inline-code">0</code>, кнопку нельзя включать.
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">remainingSeconds</code></h3>
+                <p>
+                    Сколько секунд осталось прямо сейчас. Это значение меняется во время обратного отсчета:
+                    <code class="inline-code">60, 59, 58...</code>
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">timerId</code></h3>
+                <p>
+                    Коробка для ID интервала. Сначала там <code class="inline-code">null</code>, потому что активного
+                    интервала еще нет. После <code class="inline-code">setInterval</code> туда кладется ID.
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">isRunning</code></h3>
+                <p>
+                    Флаг состояния: таймер сейчас запущен или нет. По нему кнопка понимает, вызывать
+                    <code class="inline-code">startTimer()</code> или <code class="inline-code">stopTimer()</code>.
+                </p>
+            </div>
+        </div>
+
+        <h3>Форматирование времени</h3>
+        <p>
+            Внутри логики время хранится числом секунд. На экран нужно выводить строку формата
+            <code class="inline-code">0:00</code>, поэтому появилась отдельная функция
+            <code class="inline-code">formatTime</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">formatTime</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function formatTime(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const paddedSeconds = String(seconds).padStart(2, "0");
+
+    return `${minutes}:${paddedSeconds}`;
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">Math.floor(totalSeconds / 60)</code> получает целые минуты.</li>
+            <li><code class="inline-code">totalSeconds % 60</code> получает остаток секунд после полных минут.</li>
+            <li><code class="inline-code">String(seconds)</code> превращает число в строку.</li>
+            <li><code class="inline-code">padStart(2, "0")</code> делает <code class="inline-code">5</code> строкой <code class="inline-code">"05"</code>.</li>
+        </ul>
+
+        <h3><code class="inline-code">textContent</code> и <code class="inline-code">innerHTML</code></h3>
+        <p>
+            Для вывода времени и текста кнопки используем <code class="inline-code">textContent</code>, потому что
+            нам нужен обычный текст, а не новая HTML-разметка.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">textContent vs innerHTML</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>timeContainer.textContent = "1:05";
+timerButton.textContent = "Stop";
+
+// Вставит именно текст:
+element.textContent = "&lt;strong&gt;Hello&lt;/strong&gt;";
+
+// Вставит HTML-разметку:
+element.innerHTML = "&lt;strong&gt;Hello&lt;/strong&gt;";</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">innerHTML</code> оставляем для случаев, где действительно нужна разметка,
+            например для генерации 48 SVG-wrapper-ов шкалы.
+        </p>
+
+        <h3>Разделение функций</h3>
+        <p>
+            Вместо того чтобы менять все прямо в обработчике клика, логику разделили на маленькие функции.
+            Каждая отвечает за одну понятную вещь.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Обновление экрана и установка времени</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function updateTimeDisplay() {
+    timeContainer.textContent = formatTime(remainingSeconds);
+}
+
+function setTimerTime(seconds) {
+    selectedSeconds = seconds;
+    remainingSeconds = seconds;
+    updateTimeDisplay();
+    updateButtonState();
+}
+
+function updateButtonState() {
+    timerButton.disabled = selectedSeconds === 0;
+}</code></pre>
+        </div>
+
+        <div class="callout">
+            Важное разделение: <code class="inline-code">selectedSeconds</code> отвечает за то, можно ли стартовать,
+            а <code class="inline-code">remainingSeconds</code> отвечает за ход обратного отсчета.
+        </div>
+
+        <h3>Кнопка Start / Stop</h3>
+        <p>
+            Кнопка работает как переключатель. Если таймер уже запущен, клик останавливает его. Если не запущен -
+            стартует.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Переключатель по isRunning</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>timerButton.addEventListener("click", () =&gt; {
+    if (isRunning) {
+        stopTimer();
+    } else {
+        startTimer();
+    }
+});</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">startTimer / stopTimer</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function startTimer() {
+    isRunning = true;
+    timerButton.textContent = "Stop";
+    timerButton.classList.add("stop");
+
+    timerId = setInterval(() =&gt; {
+        tickTimer();
+    }, 1000);
+}
+
+function stopTimer() {
+    isRunning = false;
+    timerButton.textContent = "Start";
+    timerButton.classList.remove("stop");
+
+    clearInterval(timerId);
+    timerId = null;
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">classList.add("stop")</code> добавляет класс без точки.</li>
+            <li>Точка нужна в CSS-селекторе: <code class="inline-code">.timer-button.stop</code>.</li>
+            <li><code class="inline-code">classList.remove("stop")</code> убирает класс и возвращает кнопку к обычному виду.</li>
+        </ul>
+
+        <h3>Один тик таймера</h3>
+        <p>
+            Перед автоматическим таймером сначала сделали функцию одного шага. Это помогло проверить механику
+            без <code class="inline-code">setInterval</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">tickTimer</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function tickTimer() {
+    if (remainingSeconds === 0) {
+        stopTimer();
+        return;
+    }
+
+    remainingSeconds = remainingSeconds - 1;
+    updateTimeDisplay();
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">return</code> внутри проверки нужен, чтобы функция не пошла дальше и не сделала
+            <code class="inline-code">remainingSeconds = -1</code>.
+        </p>
+
+        <h3>EXTRATASK: лог времени завершения</h3>
+        <p>
+            Для эксперимента добавили лог в момент, когда таймер дошел до нуля. Это оказалось полезно:
+            по логам стало видно, что <code class="inline-code">setInterval</code> продолжает работать, если его
+            не остановить через <code class="inline-code">clearInterval</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Лог момента завершения</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const logText = "CALL!!!";
+const callDate = new Date();
+
+console.log(`${logText} ${callDate.toLocaleTimeString()}`);</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">new Date()</code> создает снимок текущего момента.</li>
+            <li><code class="inline-code">toLocaleTimeString()</code> выводит локальное время, например <code class="inline-code">18:47:23</code>.</li>
+            <li><code class="inline-code">setDate()</code> не подходит для строки: это метод объекта <code class="inline-code">Date</code>, а не текста.</li>
+        </ul>
+
+        <h3><code class="inline-code">setInterval</code>, <code class="inline-code">clearInterval</code> и <code class="inline-code">timerId</code></h3>
+        <p>
+            <code class="inline-code">setInterval</code> запускает функцию снова и снова через заданный промежуток.
+            В нашем случае он вызывает <code class="inline-code">tickTimer()</code> каждую секунду.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Запуск интервала</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>timerId = setInterval(() =&gt; {
+    tickTimer();
+}, 1000);</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">1000</code> - это 1000 миллисекунд, то есть 1 секунда.</li>
+            <li><code class="inline-code">setInterval</code> возвращает ID интервала.</li>
+            <li>Этот ID сохраняем в <code class="inline-code">timerId</code>, чтобы потом остановить именно этот интервал.</li>
+            <li><code class="inline-code">clearInterval(timerId)</code> останавливает интервал по сохраненному ID.</li>
+            <li>После остановки полезно сделать <code class="inline-code">timerId = null</code>: активного интервала больше нет.</li>
+        </ul>
+
+        <div class="callout warning">
+            Если не вызвать <code class="inline-code">clearInterval(timerId)</code>, интервал продолжит работать
+            даже после визуальной остановки кнопки. Это хорошо стало видно именно благодаря логам из
+            <code class="inline-code">EXTRATASK</code>.
+        </div>
+
+        <h3>Текущий итог логики</h3>
+        <ol>
+            <li>Таймер хранит состояние в <code class="inline-code">selectedSeconds</code>, <code class="inline-code">remainingSeconds</code>, <code class="inline-code">timerId</code>, <code class="inline-code">isRunning</code>.</li>
+            <li>Кнопка включается только если выбрано время больше нуля.</li>
+            <li><code class="inline-code">Start</code> меняет состояние, кнопку и запускает интервал.</li>
+            <li><code class="inline-code">Stop</code> меняет состояние обратно и останавливает интервал.</li>
+            <li><code class="inline-code">tickTimer()</code> уменьшает оставшееся время и обновляет экран.</li>
+            <li>Когда таймер доходит до <code class="inline-code">0</code>, он останавливается и пишет в консоль время завершения.</li>
         </ol>
     </section>
 </main>

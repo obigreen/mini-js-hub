@@ -7,9 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const eggContainer = document.querySelector(".egg-container");
     const timeContainer = document.querySelector(".time-container");
     const timerButton = document.querySelector(".timer-button");
+    const notElements = document.querySelector(".default_line");
 
 
     if (!egg || !eggCenter || !eggContainer || !timeContainer || !timerButton) {
+        if (notElements) {
+            notElements.innerHTML = "<strong>Not elements</strong>";
+        }
+        console.log("Остановись пока остановка не будет последней ☝")
         return;
     }
 
@@ -28,11 +33,68 @@ document.addEventListener('DOMContentLoaded', () => {
         const seconds = totalSeconds % 60;
         const paddedSeconds = String(seconds).padStart(2, "0");
 
-        return`${minutes}:${paddedSeconds}`;
+        return `${minutes}:${paddedSeconds}`;
     }
 
-    timeContainer.textContent = formatTime(remainingSeconds);
 
+    function updateTimeDisplay() {
+        timeContainer.textContent = formatTime(remainingSeconds);
+    }
+
+
+    function setTimerTime(seconds) {
+        selectedSeconds = seconds;
+        remainingSeconds = seconds;
+        updateTimeDisplay();
+        updateButtonState();
+    }
+
+    function updateButtonState() {
+        timerButton.disabled = selectedSeconds === 0;
+    }
+
+    setTimerTime(4);
+
+
+    timerButton.addEventListener("click", () => {
+        if (isRunning) {
+            stopTimer();
+        } else {
+            startTimer();
+        }
+    });
+
+
+    function startTimer() {
+        isRunning = true;
+        timerButton.textContent = "Stop";
+        timerButton.classList.add("stop");
+
+        timerId = setInterval(() => {
+            tickTimer();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        isRunning = false;
+        timerButton.textContent = "Start";
+        timerButton.classList.remove("stop");
+        clearInterval(timerId);
+    }
+
+
+    function tickTimer() {
+        if (remainingSeconds === 0) {
+            stopTimer();
+            const logText = "CALL!!!";
+            const callDate = new Date();
+            console.log(`${logText} ${callDate.toLocaleTimeString()}`);
+            return;
+        }
+
+        remainingSeconds = remainingSeconds - 1;
+        updateTimeDisplay();
+    }
 
 
     const eggTop = document.createElement("div");
@@ -56,3 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     eggTop.append(numbersContainer);
     egg.insertBefore(eggTop, eggCenter);
 })
+
+
+// вопросы по устройству языка js
+// 1 - textContent, padStart, insertBefore, Math.floor
