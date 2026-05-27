@@ -33,3 +33,7 @@
 .todo-add {
   flex: 0 0 60px;
 }
+
+.done {
+  text-decoration: line-through;
+}

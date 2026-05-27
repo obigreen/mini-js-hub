@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List 1 Notes</title>
+    <style>
+        :root {
+            --bg: #151515;
+            --panel: #202020;
+            --panel-soft: #262626;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.70);
+            --border: rgba(255, 255, 255, 0.12);
+            --accent: #41b883;
+            --accent-strong: #2f9f6b;
+            --code-bg: #101312;
+            --danger: #ff7a59;
+            --radius: 14px;
+            --container: 980px;
+            --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            background:
+                    radial-gradient(900px 600px at 12% 0%, rgba(65, 184, 131, 0.18), transparent 55%),
+                    radial-gradient(700px 500px at 92% 18%, rgba(255, 122, 89, 0.10), transparent 55%),
+                    var(--bg);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        code,
+        pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        .page {
+            width: min(100% - 32px, var(--container));
+            margin: 0 auto;
+            padding: 32px 0 56px;
+        }
+
+        .note-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            margin: 0 -16px 28px;
+            padding: 16px;
+            background: rgba(21, 21, 21, 0.86);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+        }
+
+        .note-header-inner {
+            width: min(100%, var(--container));
+            margin: 0 auto;
+        }
+
+        .note-kicker {
+            margin: 0 0 4px;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .note-title {
+            margin: 0 0 14px;
+            font-size: clamp(28px, 5vw, 46px);
+            line-height: 1.08;
+        }
+
+        .note-nav {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .note-nav a,
+        .note-nav span {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .note-nav a:hover,
+        .note-nav a.is-active {
+            border-color: rgba(65, 184, 131, 0.55);
+            background: rgba(65, 184, 131, 0.15);
+        }
+
+        .note-nav span {
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .note-section {
+            margin-top: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: rgba(32, 32, 32, 0.82);
+            box-shadow: var(--shadow);
+        }
+
+        .note-section h2 {
+            margin: 0 0 12px;
+            font-size: 26px;
+            line-height: 1.2;
+        }
+
+        .note-section h3 {
+            margin: 24px 0 8px;
+            font-size: 19px;
+            line-height: 1.25;
+        }
+
+        .note-section p {
+            margin: 10px 0;
+            color: var(--muted);
+        }
+
+        .note-section ul,
+        .note-section ol {
+            margin: 10px 0;
+            padding-left: 22px;
+            color: var(--muted);
+        }
+
+        .note-section li + li {
+            margin-top: 6px;
+        }
+
+        .note-section strong {
+            color: var(--text);
+        }
+
+        .inline-code {
+            padding: 2px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            font-size: 0.94em;
+        }
+
+        .callout {
+            margin: 16px 0;
+            padding: 14px 16px;
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            background: rgba(65, 184, 131, 0.10);
+            color: var(--text);
+        }
+
+        .callout.warning {
+            border-left-color: var(--danger);
+            background: rgba(255, 122, 89, 0.10);
+        }
+
+        .code-card {
+            margin: 16px 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 12px;
+            background: var(--code-bg);
+        }
+
+        .code-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .code-card-title {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .copy-button {
+            border: 1px solid rgba(65, 184, 131, 0.45);
+            border-radius: 8px;
+            padding: 6px 10px;
+            background: rgba(65, 184, 131, 0.12);
+            color: var(--text);
+            cursor: pointer;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .copy-button:hover {
+            background: rgba(65, 184, 131, 0.20);
+        }
+
+        pre {
+            margin: 0;
+            padding: 16px;
+            overflow-x: auto;
+            color: #d6f5e4;
+            font-size: 14px;
+            line-height: 1.55;
+            white-space: pre;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .mini-card {
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .mini-card h3 {
+            margin-top: 0;
+        }
+
+        @media (max-width: 720px) {
+            .page {
+                width: min(100% - 20px, var(--container));
+                padding-top: 16px;
+            }
+
+            .note-header {
+                margin: 0 -10px 18px;
+                padding: 12px 10px;
+            }
+
+            .note-section {
+                padding: 18px;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <header class="note-header">
+        <div class="note-header-inner">
+            <p class="note-kicker">To-Do List 1</p>
+            <h1 class="note-title">Конспект разработки</h1>
+            <nav class="note-nav" aria-label="Навигация по шагам">
+                <a href="#step1" class="is-active">Step 1</a>
+                <a href="#step2">Step 2</a>
+                <a href="#jquery-core">jQuery база</a>
+                <span>Step 3</span>
+            </nav>
+        </div>
+    </header>
+
+    <section class="note-section" id="step1">
+        <h2>Step 1: jQuery-объект, DOM-элемент и проверка через length</h2>
+        <p>
+            На первом JS-шаге подключили jQuery через локальный npm-пакет и начали с самого базового места:
+            как найти элементы на странице и как проверить, что они действительно найдены.
+        </p>
+
+        <div class="callout">
+            Главная мысль этапа: <code class="inline-code">document.querySelector(...)</code> и
+            <code class="inline-code">$(...)</code> похожи по задаче, но возвращают разные вещи.
+            Из-за этого проверка существования элемента тоже пишется по-разному.
+        </div>
+
+        <h3>Подключение jQuery</h3>
+        <p>
+            В компоненте jQuery установлен через npm. Но установка пакета сама по себе не делает
+            <code class="inline-code">$</code> доступным на странице. Для обычной статической HTML-страницы
+            библиотеку нужно подключить тегом <code class="inline-code">script</code> перед своим
+            <code class="inline-code">script.js</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Порядок подключения скриптов</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>&lt;script src="./node_modules/jquery/dist/jquery.min.js"&gt;&lt;/script&gt;
+&lt;script src="./script.js"&gt;&lt;/script&gt;</code></pre>
+        </div>
+
+        <p>
+            Порядок важен: сначала загружается jQuery, потом наш файл. Если поменять их местами,
+            в <code class="inline-code">script.js</code> символ <code class="inline-code">$</code> еще не будет существовать.
+        </p>
+
+        <h3>Готовность DOM</h3>
+        <p>
+            Запись ниже говорит: выполни код внутри функции после того, как HTML-разметка уже создана
+            и элементы можно искать.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">jQuery DOM ready</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>$(function () {
+    // Здесь уже можно искать элементы.
+});</code></pre>
+        </div>
+
+        <p>
+            Это короткая jQuery-форма для события готовности документа. В обычном DOM похожая идея выглядела бы
+            через <code class="inline-code">DOMContentLoaded</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Похожая идея на обычном DOM</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>document.addEventListener("DOMContentLoaded", () =&gt; {
+    // Здесь уже можно искать элементы.
+});</code></pre>
+        </div>
+
+        <h3>jQuery-ссылки на элементы</h3>
+        <p>
+            В текущем компоненте основные элементы имеют уникальные id:
+            <code class="inline-code">todoInput</code>, <code class="inline-code">todoAdd</code>,
+            <code class="inline-code">todoList</code>. Их можно найти через jQuery-селекторы.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Поиск элементов через jQuery</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>$(function () {
+    const todoInput = $("#todoInput");
+    const todoAdd = $("#todoAdd");
+    const todoList = $("#todoList");
+
+    console.log(todoInput.length, todoAdd.length, todoList.length);
+});</code></pre>
+        </div>
+
+        <p>
+            В консоли ожидаем <code class="inline-code">1 1 1</code>. Это значит, что каждый селектор нашел
+            по одному элементу.
+        </p>
+
+        <div class="callout">
+            В jQuery-проектах часто называют такие переменные с префиксом
+            <code class="inline-code">$</code>: например <code class="inline-code">$todoInput</code>.
+            Это не магия языка, а подсказка человеку: внутри лежит jQuery-объект, а не обычный DOM-элемент.
+        </div>
+
+        <h3>Обычный DOM: если не найдено, будет null</h3>
+        <p>
+            Когда элемент ищется через <code class="inline-code">document.querySelector</code>, результатом будет
+            либо найденный DOM-элемент, либо <code class="inline-code">null</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Проверка в обычном DOM</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const todoInput = document.querySelector("#todoInput");
+
+if (!todoInput) {
+    console.log("Элемент не найден");
+    return;
+}</code></pre>
+        </div>
+
+        <p>
+            Такая проверка работает, потому что <code class="inline-code">null</code> в условии считается
+            ложным значением.
+        </p>
+
+        <h3>jQuery: если не найдено, будет пустой jQuery-объект</h3>
+        <p>
+            jQuery ведет себя иначе. Даже если селектор ничего не нашел, результатом будет не
+            <code class="inline-code">null</code>, а jQuery-объект с длиной <code class="inline-code">0</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Неправильная проверка для jQuery</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const todoInput = $("#wrongId");
+
+if (!todoInput) {
+    // Этот блок не выполнится.
+}</code></pre>
+        </div>
+
+        <p>
+            Объект существует, поэтому <code class="inline-code">!todoInput</code> не сработает. Но внутри него
+            нет найденных элементов.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Правильная проверка для jQuery</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const todoInput = $("#todoInput");
+const todoAdd = $("#todoAdd");
+const todoList = $("#todoList");
+
+if (!todoInput.length || !todoAdd.length || !todoList.length) {
+    console.log("Остановись пока остановка не будет последней ☝");
+    return;
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">$("#todoInput").length === 1</code> - найден один элемент.</li>
+            <li><code class="inline-code">$("#wrongId").length === 0</code> - ничего не найдено.</li>
+            <li><code class="inline-code">if (!todoInput.length)</code> - нормальная jQuery-проверка на отсутствие элемента.</li>
+        </ul>
+
+        <h3>Итог Step 1</h3>
+        <ol>
+            <li>jQuery должен быть подключен до <code class="inline-code">script.js</code>.</li>
+            <li><code class="inline-code">$(function () {})</code> запускает код после готовности DOM.</li>
+            <li><code class="inline-code">$("#todoInput")</code> возвращает jQuery-объект, а не обычный DOM-элемент.</li>
+            <li>Обычный DOM при промахе возвращает <code class="inline-code">null</code>.</li>
+            <li>jQuery при промахе возвращает пустой объект с <code class="inline-code">length: 0</code>.</li>
+            <li>Поэтому jQuery-элементы проверяем через <code class="inline-code">.length</code>.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step2">
+        <h2>Step 2: Добавление, выполнение, удаление и Enter</h2>
+        <p>
+            На этом этапе todo-list стал рабочим: задача добавляется из input, появляется сверху списка,
+            input очищается, задачу можно отметить выполненной, удалить и добавить по клавише Enter.
+        </p>
+
+        <div class="callout">
+            Этот шаг начался с ошибки <code class="inline-code">todoText(" ")</code>. Она помогла увидеть важное
+            различие: <code class="inline-code">todoText</code> - это строка, а очищать нужно сам input через
+            <code class="inline-code">todoInput.val("")</code>.
+        </div>
+
+        <h3><code class="inline-code">.val()</code> как getter и setter</h3>
+        <p>
+            Метод <code class="inline-code">.val()</code> работает в двух режимах. Без аргумента он читает значение.
+            С аргументом - записывает новое значение.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Read and clear input</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const todoText = todoInput.val().trim();
+
+if (todoText === "") {
+    console.log("Введите текст в поле");
+    return;
+}
+
+console.log(todoText);
+todoInput.val("");</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">todoInput.val()</code> читает значение из input.</li>
+            <li><code class="inline-code">todoInput.val("")</code> записывает пустую строку в input.</li>
+            <li><code class="inline-code">todoText(" ")</code> не работает, потому что строка не является функцией.</li>
+        </ul>
+
+        <h3>Создание новой задачи</h3>
+        <p>
+            Новая задача собирается как HTML-строка через template literal. Потом эта строка превращается в
+            jQuery-элемент, чтобы к нему можно было применить jQuery-анимации.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Create todo item</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const newLine = $(`
+    &lt;li class="todo-item"&gt;
+        &lt;span class="todo-text"&gt;${todoText}&lt;/span&gt;
+        &lt;button class="todo-check" type="button" aria-label="Mark task as done"&gt;✔&lt;/button&gt;
+        &lt;button class="todo-delete" type="button" aria-label="Delete task"&gt;✖&lt;/button&gt;
+    &lt;/li&gt;
+`);</code></pre>
+        </div>
+
+        <p>
+            Здесь важно, что <code class="inline-code">newLine</code> - это "что вставляем", а
+            <code class="inline-code">todoList</code> - это "куда вставляем".
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Container receives content</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>todoList.prepend(newLine);</code></pre>
+        </div>
+
+        <div class="callout">
+            Важная формулировка: метод вставки вызывается у контейнера, а параметром передается элемент,
+            который нужно вставить. Поэтому не <code class="inline-code">newLine.prepend()</code>,
+            а <code class="inline-code">todoList.prepend(newLine)</code>.
+        </div>
+
+        <h3>Появление новой задачи</h3>
+        <p>
+            Чтобы задача плавно появилась, ее нужно сначала скрыть, потом вставить в DOM, а потом показать.
+            Анимацию вызываем у того элемента, который должен появиться, то есть у новой строки.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Hide, insert, fade in</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>newLine.hide();
+todoList.prepend(newLine);
+newLine.fadeIn("fast");</code></pre>
+        </div>
+
+        <p>
+            Модель: создали <code class="inline-code">li</code> в памяти, спрятали его, вставили в список,
+            затем плавно показали. Если вызывать <code class="inline-code">fadeIn</code> у
+            <code class="inline-code">todoList</code>, будет анимироваться контейнер списка, а не новая задача.
+        </p>
+
+        <h3>Done через делегирование событий</h3>
+        <p>
+            Кнопки задач бывают двух типов: стартовые уже есть в HTML, новые появляются позже через
+            <code class="inline-code">prepend</code>. Поэтому обработчик ставится на постоянный родитель
+            <code class="inline-code">todoList</code>, а конкретная кнопка указывается вторым аргументом.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Delegated done handler</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>todoList.on("click", ".todo-check", function () {
+    $(this).closest(".todo-item").find(".todo-text").toggleClass("done");
+});</code></pre>
+        </div>
+
+        <p>
+            Эта цепочка читается как маршрут: кнопка, по которой кликнули, затем ближайший
+            <code class="inline-code">li.todo-item</code>, затем текст внутри этой задачи, затем переключение класса.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Route through the DOM</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>$(this)                  // кнопка, по которой кликнули
+    .closest(".todo-item") // текущая задача
+    .find(".todo-text")    // текст внутри текущей задачи
+    .toggleClass("done");  // включить или выключить done</code></pre>
+        </div>
+
+        <h3>Удаление через fadeOut и remove</h3>
+        <p>
+            Удаление тоже использует делегирование. Сначала находим текущую задачу через
+            <code class="inline-code">closest</code>, потом плавно скрываем ее, а после завершения анимации
+            удаляем из DOM.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Delegated delete handler</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>todoList.on("click", ".todo-delete", function () {
+    $(this).closest(".todo-item").fadeOut("fast", function () {
+        $(this).remove();
+    });
+});</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">fadeOut("fast", callback)</code> сначала скрывает элемент с анимацией,
+            затем запускает callback. Внутри callback <code class="inline-code">this</code> указывает на элемент,
+            который только что анимировался.
+        </p>
+
+        <h3>Добавление по Enter</h3>
+        <p>
+            Финальный кусок логики повторяет поведение кнопки Add при нажатии Enter внутри input.
+            Событие называется <code class="inline-code">keyup</code>, а конкретная клавиша хранится в
+            <code class="inline-code">event.key</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Enter key handler</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>todoInput.on("keyup", function (event) {
+    if (event.key === "Enter") {
+        todoAdd.click();
+    }
+});</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">.on("keyup", ...)</code> - слушаем момент, когда клавишу отпустили.</li>
+            <li><code class="inline-code">event.key</code> - читаем, какая именно клавиша была нажата.</li>
+            <li><code class="inline-code">todoAdd.click()</code> - программно запускаем тот же сценарий, что и клик по кнопке.</li>
+        </ul>
+
+        <h3>Итог Step 2</h3>
+        <ol>
+            <li>Input читается через <code class="inline-code">.val()</code>, а очищается через <code class="inline-code">.val("")</code>.</li>
+            <li>Новая задача создается как jQuery-элемент из HTML-строки.</li>
+            <li>Контейнер <code class="inline-code">todoList</code> получает новую строку через <code class="inline-code">.prepend(newLine)</code>.</li>
+            <li>Новые и старые кнопки работают через делегирование событий.</li>
+            <li>Done переключается через маршрут <code class="inline-code">this -> closest -> find -> toggleClass</code>.</li>
+            <li>Удаление использует <code class="inline-code">fadeOut</code> и <code class="inline-code">remove</code>.</li>
+            <li>Enter вызывает тот же click-сценарий, что и кнопка Add.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="jquery-core">
+        <h2>jQuery база: методы, цепочки и тип значения</h2>
+        <p>
+            Этот раздел не привязан к одному шагу задачи. Это отдельная памятка по jQuery и методам,
+            чтобы не искать важные языковые моменты внутри рабочего конспекта.
+        </p>
+
+        <div class="callout">
+            Главный принцип: метод вызывается у значения слева от точки. Поэтому важно понимать,
+            что именно вернул предыдущий вызов: jQuery-объект, DOM-элемент, строку, число или что-то другое.
+        </div>
+
+        <h3>Почему порядок <code class="inline-code">.val().trim()</code> важен</h3>
+        <p>
+            Рабочая запись выглядит так:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Правильный порядок</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const todoText = todoInput.val().trim();</code></pre>
+        </div>
+
+        <p>
+            Эта строка выполняется последовательно слева направо:
+        </p>
+
+        <ol>
+            <li><code class="inline-code">todoInput</code> - jQuery-объект, найденный через <code class="inline-code">$("#todoInput")</code>.</li>
+            <li><code class="inline-code">todoInput.val()</code> читает значение поля формы и возвращает строку.</li>
+            <li><code class="inline-code">.trim()</code> вызывается уже у строки и убирает пробелы по краям.</li>
+        </ol>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Что происходит по шагам</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>todoInput                // jQuery-объект
+todoInput.val()          // строка: "   Купить хлеб   "
+todoInput.val().trim()   // строка: "Купить хлеб"</code></pre>
+        </div>
+
+        <h3>Почему <code class="inline-code">todoInput.trim().val()</code> ломается</h3>
+        <p>
+            Ошибочная запись:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Неправильный порядок</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const todoText = todoInput.trim().val();</code></pre>
+        </div>
+
+        <p>
+            Здесь JavaScript пытается вызвать <code class="inline-code">.trim()</code> прямо у
+            <code class="inline-code">todoInput</code>. Но <code class="inline-code">todoInput</code> - это
+            jQuery-объект, а <code class="inline-code">trim()</code> является методом строки.
+            Поэтому возникает ошибка:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Ошибка</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>Uncaught TypeError: todoInput.trim is not a function</code></pre>
+        </div>
+
+        <div class="callout warning">
+            Коротко: <code class="inline-code">trim</code> не умеет работать с input или jQuery-объектом напрямую.
+            Сначала нужен <code class="inline-code">.val()</code>, потому что он достает строку из значения поля.
+        </div>
+
+        <h3>Цепочка вызовов</h3>
+        <p>
+            Запись вида <code class="inline-code">a.b().c()</code> означает не "вызвать все сразу",
+            а последовательность действий.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Модель цепочки</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const step1 = a.b();
+const step2 = step1.c();</code></pre>
+        </div>
+
+        <p>
+            Метод <code class="inline-code">.c()</code> вызывается не у исходного <code class="inline-code">a</code>,
+            а у результата <code class="inline-code">a.b()</code>. Поэтому каждый следующий метод должен подходить
+            к типу результата предыдущего метода.
+        </p>
+
+        <h3>Что именно читает <code class="inline-code">.val()</code></h3>
+        <p>
+            <code class="inline-code">.val()</code> - jQuery-метод для элементов формы. Он читает или записывает
+            значение свойства <code class="inline-code">value</code>.
+        </p>
+
+        <div class="two-column">
+            <div class="mini-card">
+                <h3>Подходит для</h3>
+                <ul>
+                    <li><code class="inline-code">input</code></li>
+                    <li><code class="inline-code">textarea</code></li>
+                    <li><code class="inline-code">select</code></li>
+                </ul>
+            </div>
+
+            <div class="mini-card">
+                <h3>Не про это</h3>
+                <ul>
+                    <li>текст внутри <code class="inline-code">p</code></li>
+                    <li>текст внутри <code class="inline-code">div</code></li>
+                    <li>текст внутри <code class="inline-code">span</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Примеры .val()</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>$("#email").val();    // строка из input
+$("#message").val();  // строка из textarea
+$("#city").val();     // value выбранного option</code></pre>
+        </div>
+
+        <p>
+            В todo-list нас интересует именно значение, которое пользователь напечатал в поле:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Todo input</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const todoText = todoInput.val().trim();</code></pre>
+        </div>
+
+        <h3><code class="inline-code">.val()</code>, <code class="inline-code">.text()</code>, <code class="inline-code">.html()</code></h3>
+        <p>
+            Эти методы отвечают за разные части элемента.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Как выбирать метод</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>$("#todoInput").val();      // value у input
+$(".todo-text").text();     // текст внутри элемента
+$(".todo-item").html();     // HTML-разметка внутри элемента</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">.val()</code> - значение формы.</li>
+            <li><code class="inline-code">.text()</code> - обычный текст внутри элемента.</li>
+            <li><code class="inline-code">.html()</code> - HTML-разметка внутри элемента.</li>
+        </ul>
+
+        <h3>Frontend-пример</h3>
+        <p>
+            Типичный сценарий: пользователь вводит поисковый запрос, а интерфейс показывает этот запрос в тексте.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Search UI</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>&lt;input id="searchInput" placeholder="Search products"&gt;
+&lt;p id="resultText"&gt;&lt;/p&gt;</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Read value, write text</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const searchInput = $("#searchInput");
+const resultText = $("#resultText");
+
+const query = searchInput.val().trim();
+
+resultText.text(`You searched: ${query}`);</code></pre>
+        </div>
+
+        <p>
+            Здесь <code class="inline-code">searchInput.val()</code> читает значение формы,
+            <code class="inline-code">trim()</code> очищает строку, а
+            <code class="inline-code">resultText.text(...)</code> записывает обычный текст в параграф.
+        </p>
+
+        <h3>Методы из todo-list</h3>
+        <p>
+            Ниже короткая справка по jQuery-методам, которые реально используются в компоненте.
+            Это не полный справочник jQuery, а рабочий набор текущей задачи.
+        </p>
+
+        <div class="two-column">
+            <div class="mini-card">
+                <h3><code class="inline-code">.on()</code></h3>
+                <p>
+                    Подписывает элемент на событие. В todo-list используется и напрямую, и как делегирование.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Direct</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>todoAdd.on("click", function () {
+    ...
+});</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">.on(event, selector, handler)</code></h3>
+                <p>
+                    Делегирует событие: обработчик висит на родителе, но срабатывает для подходящего дочернего элемента.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Delegated</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>todoList.on("click", ".todo-check", function () {
+    ...
+});</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">.prepend()</code></h3>
+                <p>
+                    Вставляет содержимое в начало контейнера. Метод вызывается у контейнера.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Prepend</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>todoList.prepend(newLine);</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">.hide()</code> / <code class="inline-code">.fadeIn()</code></h3>
+                <p>
+                    <code class="inline-code">hide</code> задает скрытое стартовое состояние,
+                    <code class="inline-code">fadeIn</code> плавно показывает элемент.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Appear</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>newLine.hide();
+todoList.prepend(newLine);
+newLine.fadeIn("fast");</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">.closest()</code></h3>
+                <p>
+                    Идет вверх от текущего элемента и ищет ближайшего родителя по селектору.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Closest</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>$(this).closest(".todo-item");</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">.find()</code></h3>
+                <p>
+                    Ищет дочерний элемент внутри уже найденного контейнера.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Find</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>currentItem.find(".todo-text");</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">.toggleClass()</code></h3>
+                <p>
+                    Переключает класс: если класса нет - добавляет, если есть - убирает.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Toggle class</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>currentText.toggleClass("done");</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">.fadeOut()</code> / <code class="inline-code">.remove()</code></h3>
+                <p>
+                    <code class="inline-code">fadeOut</code> скрывает с анимацией,
+                    <code class="inline-code">remove</code> удаляет элемент из DOM.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Remove after animation</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>currentItem.fadeOut("fast", function () {
+    $(this).remove();
+});</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">.click()</code></h3>
+                <p>
+                    Программно запускает click-событие. В todo-list Enter вызывает тот же сценарий, что и кнопка Add.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Trigger click</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>todoAdd.click();</code></pre>
+                </div>
+            </div>
+
+            <div class="mini-card">
+                <h3><code class="inline-code">event.key</code></h3>
+                <p>
+                    Это не jQuery-метод, а свойство объекта события. Показывает, какая клавиша была нажата.
+                </p>
+                <div class="code-card">
+                    <div class="code-card-header">
+                        <span class="code-card-title">Enter check</span>
+                        <button class="copy-button" type="button">Copy</button>
+                    </div>
+                    <pre><code>if (event.key === "Enter") {
+    todoAdd.click();
+}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <h3>Итог jQuery-базы</h3>
+        <ol>
+            <li>Метод вызывается у значения слева от точки.</li>
+            <li><code class="inline-code">.val()</code> работает с jQuery-объектом формы и возвращает строку.</li>
+            <li><code class="inline-code">.trim()</code> работает со строкой, а не с input.</li>
+            <li>Цепочка методов зависит от типа результата предыдущего метода.</li>
+            <li>Для формы используем <code class="inline-code">.val()</code>, для текста элемента - <code class="inline-code">.text()</code>, для разметки - <code class="inline-code">.html()</code>.</li>
+            <li>Для динамических элементов используем делегирование: <code class="inline-code">.on("click", ".selector", handler)</code>.</li>
+            <li>Маршрут по DOM строим через <code class="inline-code">$(this)</code>, <code class="inline-code">.closest()</code> и <code class="inline-code">.find()</code>.</li>
+        </ol>
+    </section>
+</main>
+
+<script>
+    const copyFallback = (text) => {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        document.body.append(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+    };
+
+    document.querySelectorAll(".code-card").forEach((card) => {
+        const button = card.querySelector(".copy-button");
+        const code = card.querySelector("code");
+
+        if (!button || !code) {
+            return;
+        }
+
+        button.addEventListener("click", async () => {
+            const text = code.innerText;
+
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    copyFallback(text);
+                }
+
+                button.textContent = "Copied";
+            } catch (error) {
+                copyFallback(text);
+                button.textContent = "Copied";
+            }
+
+            window.setTimeout(() => {
+                button.textContent = "Copy";
+            }, 1400);
+        });
+    });
+
+    const navLinks = Array.from(document.querySelectorAll(".note-nav a"));
+
+    navLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+            navLinks.forEach((item) => item.classList.remove("is-active"));
+            link.classList.add("is-active");
+        });
+    });
+</script>
+</body>
+</html>
