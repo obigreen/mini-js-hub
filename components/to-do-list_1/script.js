@@ -10,9 +10,7 @@ $(function () {
         return;
     }
 
-
     todoAdd.on("click", function () {
-
         const todoText = todoInput.val().trim();
 
         if (todoText === "") {
@@ -20,20 +18,19 @@ $(function () {
             return;
         }
 
+        todoList.find(".todo-empty").remove();
 
-        const newLine = $(`
-              <li class="todo-item">
-                        <span class="todo-text">${todoText}</span>
-                        <button class="todo-check" type="button" aria-label="Mark task as done">✔</button>
-                        <button class="todo-delete" type="button" aria-label="Delete task">✖</button>
-                    </li>
-                `)
 
-        newLine.hide(300);
+        const newLine =
+            $(`<li class="todo-item">
+                    <span class="todo-text">${todoText}</span>
+                    <button class="todo-check" type="button" aria-label="Mark task as done">✔</button>
+                    <button class="todo-delete" type="button" aria-label="Delete task">✖</button>
+                </li>
+            `);
+        newLine.hide();
         todoList.prepend(newLine);
-        newLine.fadeIn("fast");
-
-
+        newLine.slideDown(300);
         todoInput.val("");
     })
 
@@ -50,9 +47,21 @@ $(function () {
         $(this).closest(".todo-item").find(".todo-text").toggleClass("done");
     })
 
+
     todoList.on("click", ".todo-delete", function () {
-        $(this).closest(".todo-item").fadeOut("fast", function () {
+        $(this).closest(".todo-item").slideUp(300, function () {
             $(this).remove();
+
+            if (todoList.find(".todo-item").length === 0) {
+                const notElement = $(`
+                <li class="todo-empty">
+                <span class="todo-text">Not tasks</span>
+                </li>
+            `);
+
+
+                todoList.prepend(notElement);
+            }
         });
     })
 })

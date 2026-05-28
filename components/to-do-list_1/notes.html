@@ -284,7 +284,7 @@
                 <a href="#step1" class="is-active">Step 1</a>
                 <a href="#step2">Step 2</a>
                 <a href="#jquery-core">jQuery база</a>
-                <span>Step 3</span>
+                <a href="#step3">Step 3</a>
             </nav>
         </div>
     </header>
@@ -1033,6 +1033,319 @@ newLine.fadeIn("fast");</code></pre>
             <li>Для формы используем <code class="inline-code">.val()</code>, для текста элемента - <code class="inline-code">.text()</code>, для разметки - <code class="inline-code">.html()</code>.</li>
             <li>Для динамических элементов используем делегирование: <code class="inline-code">.on("click", ".selector", handler)</code>.</li>
             <li>Маршрут по DOM строим через <code class="inline-code">$(this)</code>, <code class="inline-code">.closest()</code> и <code class="inline-code">.find()</code>.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step3">
+        <h2>Step 3: Анимации, empty-state и финальная доводка</h2>
+        <p>
+            На этом этапе основная логика уже работала, поэтому фокус сместился на вопросы, которые обычно
+            всплывают при полировке интерфейса: что означали странные места из оригинального Pug/Sass,
+            почему hover может возвращаться рывком, чем <code class="inline-code">fade</code> отличается от
+            <code class="inline-code">slide</code>, и как правильно показать состояние "задач нет".
+        </p>
+
+        <h3>Что такое <code class="inline-code">#canvas</code> в Pug</h3>
+        <p>
+            В оригинале было написано <code class="inline-code">#canvas</code>. В Pug это сокращение не для
+            настоящего HTML-элемента <code class="inline-code">&lt;canvas&gt;</code>, а для обычного
+            <code class="inline-code">&lt;div id="canvas"&gt;</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Pug shorthand</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>#canvas</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">HTML result</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>&lt;div id="canvas"&gt;&lt;/div&gt;</code></pre>
+        </div>
+
+        <p>
+            То есть автор назвал контейнер словом <code class="inline-code">canvas</code>, но это не графический
+            canvas API. В нашей адаптации такой блок можно спокойно заменить более понятной семантикой:
+            <code class="inline-code">section.todo</code>, <code class="inline-code">ul.todo-list</code>,
+            <code class="inline-code">li.todo-item</code>.
+        </p>
+
+        <h3><code class="inline-code">-webkit-transition-duration</code> и обычный transition</h3>
+        <p>
+            В оригинальном Sass было:
+            <code class="inline-code">-webkit-transition-duration: 0.4s</code> и
+            <code class="inline-code">transition-duration: 0.4s</code>. Первая строка - старый vendor prefix
+            для WebKit-браузеров. Вторая строка - стандартное CSS-свойство.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Old prefix + standard property</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>-webkit-transition-duration: 0.4s;
+transition-duration: 0.4s;</code></pre>
+        </div>
+
+        <p>
+            Сейчас в обычном учебном компоненте достаточно стандартного свойства. Если проект когда-нибудь
+            будет собираться через PostCSS/Autoprefixer, нужные префиксы можно генерировать автоматически.
+        </p>
+
+        <div class="callout">
+            <code class="inline-code">transition-duration</code> отвечает только за длительность. Чаще удобнее
+            писать короткую запись <code class="inline-code">transition</code>, где сразу указаны свойство,
+            время и характер движения.
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Modern transition</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.todo-add {
+    transition: transform 0.2s ease;
+}
+
+.todo-add:hover {
+    transform: scale(1.15);
+}</code></pre>
+        </div>
+
+        <h3>Почему hover увеличивался плавно, а назад возвращался резко</h3>
+        <p>
+            <code class="inline-code">transition</code> должен лежать на базовом селекторе, а не только внутри
+            <code class="inline-code">:hover</code>. Базовый селектор описывает обычное состояние элемента.
+            Hover описывает состояние под курсором.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Wrong place for transition</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.todo-add:hover {
+    transition: font-size 0.2s ease;
+    font-size: 37px;
+}</code></pre>
+        </div>
+
+        <p>
+            В такой записи анимация существует только пока курсор наведен. Когда курсор уходит, браузер сразу
+            возвращает элемент в обычное состояние, где <code class="inline-code">transition</code> уже нет.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Transition on base selector</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.todo-add {
+    transition: font-size 0.2s ease;
+}
+
+.todo-add:hover {
+    font-size: 37px;
+}</code></pre>
+        </div>
+
+        <p>
+            Для кнопок чаще приятнее анимировать не <code class="inline-code">font-size</code>, а
+            <code class="inline-code">transform: scale(...)</code>. Изменение font-size может менять геометрию
+            кнопки и дергать соседние элементы, а transform визуально масштабирует элемент без пересчета потока.
+        </p>
+
+        <h3><code class="inline-code">fade</code> и <code class="inline-code">slide</code>: разная анимация</h3>
+        <p>
+            <code class="inline-code">fadeIn</code> и <code class="inline-code">fadeOut</code> в первую очередь
+            работают с прозрачностью. Они не решают задачу плавного смещения соседних элементов.
+        </p>
+
+        <p>
+            Для списка, где элементы должны занимать и освобождать место, лучше подходят
+            <code class="inline-code">slideDown</code> и <code class="inline-code">slideUp</code>. Они анимируют
+            высоту элемента, поэтому остальные пункты списка визуально сдвигаются плавнее.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Add with slideDown</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>newLine.hide();
+todoList.prepend(newLine);
+newLine.slideDown(300);</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Delete with slideUp</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>$(this).closest(".todo-item").slideUp(300, function () {
+    $(this).remove();
+});</code></pre>
+        </div>
+
+        <h3>Почему <code class="inline-code">hide(300)</code> не является задержкой</h3>
+        <p>
+            <code class="inline-code">hide(300)</code> означает "скрывай элемент 300 миллисекунд". Это анимация
+            скрытия, а не пауза перед появлением. Если нужно имитировать задержку, например будто ответ пришел
+            с сервера, лучше использовать <code class="inline-code">delay</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Delay before appearing</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>newLine.hide();
+todoList.prepend(newLine);
+newLine.delay(300).slideDown(300);</code></pre>
+        </div>
+
+        <h3>Empty-state: "задач нет" не должен быть обычной задачей</h3>
+        <p>
+            Идея "если задач нет, показать текст" правильная. Ошибка была в том, что сообщение пустого списка
+            пыталось стать вариантом <code class="inline-code">newLine</code>. Но
+            <code class="inline-code">newLine</code> отвечает за новую задачу, а "задач нет" - это отдельное
+            состояние интерфейса.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">The count of real tasks</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>todoList.find(".todo-item").length</code></pre>
+        </div>
+
+        <p>
+            Если сообщение "Not tasks" тоже получает класс <code class="inline-code">todo-item</code>, то для JS
+            оно становится обычной задачей. Проверка количества начинает считать сообщение как пункт списка.
+            Поэтому реальная задача и empty-сообщение должны иметь разные классы.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Separate classes</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>&lt;li class="todo-item"&gt;...&lt;/li&gt;
+&lt;li class="todo-empty"&gt;Not tasks&lt;/li&gt;</code></pre>
+        </div>
+
+        <div class="callout">
+            Если empty-сообщение лежит внутри <code class="inline-code">ul</code>, оно тоже должно быть
+            <code class="inline-code">li</code>, а не <code class="inline-code">p</code>. Но класс у него должен
+            быть отдельный: <code class="inline-code">todo-empty</code>, а не
+            <code class="inline-code">todo-item</code>.
+        </div>
+
+        <h3>Почему тернарник не подошел для empty-state</h3>
+        <p>
+            Вариант с тернарным оператором пытался решить две разные задачи одной переменной:
+            либо создать задачу, либо создать сообщение "задач нет". Но при клике Add пользователь как раз
+            хочет добавить задачу. Поэтому создание задачи должно происходить всегда, если input не пустой.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Wrong responsibility</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const newLine = todoList.find(".todo-item").length === 0
+    ? $("&lt;li&gt;Not tasks&lt;/li&gt;")
+    : $("&lt;li class='todo-item'&gt;...&lt;/li&gt;");</code></pre>
+        </div>
+
+        <p>
+            В пустом списке такая логика создает не первую задачу, а сообщение "задач нет". Поэтому правильная
+            модель другая: Add создает задачу, Delete проверяет, не закончились ли задачи.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Add task: remove empty message first</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>todoList.find(".todo-empty").remove();
+
+newLine.hide();
+todoList.prepend(newLine);
+newLine.slideDown(300);</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Delete task: show empty message after remove</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>$(this).closest(".todo-item").slideUp(300, function () {
+    $(this).remove();
+
+    if (todoList.find(".todo-item").length === 0) {
+        const notElement = $("&lt;li class='todo-empty'&gt;Not tasks&lt;/li&gt;");
+
+        notElement.hide();
+        todoList.prepend(notElement);
+        notElement.slideDown(300);
+    }
+});</code></pre>
+        </div>
+
+        <h3>Почему список дергался при замене последней задачи на empty-state</h3>
+        <p>
+            <code class="inline-code">slideUp</code> сначала сжимает последнюю задачу до нулевой высоты.
+            Только после завершения анимации срабатывает callback, элемент удаляется, и потом вставляется
+            <code class="inline-code">todo-empty</code>. Поэтому контейнер сначала успевает схлопнуться,
+            а затем снова раскрывается под сообщение.
+        </p>
+
+        <p>
+            JS управляет состоянием: добавить задачу, удалить задачу, показать сообщение. Но стабильность
+            размеров интерфейса чаще решается CSS-ом: списку можно дать минимальную высоту, а обычной задаче
+            и empty-состоянию - похожую высоту строки.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Stabilize list geometry</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.todo-list {
+    min-height: 74px;
+}
+
+.todo-item,
+.todo-empty {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+}</code></pre>
+        </div>
+
+        <div class="callout">
+            Итоговая формула: JS отвечает за состояние и порядок действий, CSS отвечает за геометрию и плавность
+            визуального перехода. Если элемент "скачет", часто проблема не в условии JS, а в том, что разные
+            состояния занимают разную высоту.
+        </div>
+
+        <h3>Итог Step 3</h3>
+        <ol>
+            <li><code class="inline-code">#canvas</code> в Pug - это <code class="inline-code">&lt;div id="canvas"&gt;</code>, а не настоящий canvas-элемент.</li>
+            <li><code class="inline-code">-webkit-...</code> - старый браузерный префикс; базово используем стандартный <code class="inline-code">transition</code>.</li>
+            <li><code class="inline-code">transition</code> кладется на базовый селектор, чтобы анимация работала и туда, и обратно.</li>
+            <li><code class="inline-code">fade</code> анимирует прозрачность, <code class="inline-code">slide</code> лучше подходит для плавного изменения высоты списка.</li>
+            <li><code class="inline-code">hide(300)</code> - это анимация скрытия, а не задержка; для паузы есть <code class="inline-code">delay(300)</code>.</li>
+            <li><code class="inline-code">todo-item</code> должен означать только настоящую задачу, а empty-сообщение должно иметь отдельный класс.</li>
+            <li>При добавлении задачи empty-сообщение удаляется, при удалении последней задачи создается заново.</li>
+            <li>Скачки при замене состояний часто лечатся CSS-геометрией: <code class="inline-code">min-height</code> и одинаковой высотой строк.</li>
         </ol>
     </section>
 </main>

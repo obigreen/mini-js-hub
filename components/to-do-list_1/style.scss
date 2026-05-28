@@ -3,7 +3,7 @@
 }
 
 .default_line {
-    margin: 0;
+    margin: 15px 0;
     color: rgba(255, 255, 255, 0.82);
 }
 
@@ -21,25 +21,89 @@ $todo-text: #ECF0F1;
 .todo {
     width: min(100%, 400px);
     margin: 0 auto;
+    background-color: $todo-bg;
+    border-radius: 15px;
 }
 
 .todo-header {
+    box-shadow: 0 17px 19px #162029;
     width: 100%;
 }
 
 .todo-form {
     display: flex;
     height: $todo-line-height;
+    background-color: $todo-accent;
+    border-radius: 15px 15px 0 0;
 }
 
 .todo-input {
     flex: 1;
+    border: none;
+    color: $todo-text;
+    padding: 10px 10px 10px 20px;
+    font-size: 16px;
+    background: transparent;
+
+    &:focus {
+        outline: none;
+    }
+
+    &::placeholder {
+        color: $todo-text;
+    }
 }
 
 .todo-add {
     flex: 0 0 60px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    font-size: 30px;
+    color: $todo-text;
+    transition: font-size 0.2s ease;
+}
+
+.todo-add:hover {
+    font-size: 37px;
 }
 
 .done {
     text-decoration: line-through;
+    color: $todo-accent;
+    transition: 0.2s ease;
 }
+
+.todo-list {
+    padding: 20px;
+    min-height: 78px;
+}
+
+.todo-item, .todo-empty {
+    display: flex;
+    justify-content: space-between;
+    padding: 7px 0;
+}
+
+.todo-empty {
+    text-align: center;
+}
+
+.todo-text {
+    width: 100%;
+}
+
+.todo-check, .todo-delete {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: $todo-text;
+    cursor: pointer;
+}
+
+.todo-delete:hover, .todo-check:hover, .todo-add:hover {
+    text-shadow: 0 0 15px white;
+    transition: 0.2s ease;
+}
+

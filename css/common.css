@@ -78,22 +78,22 @@ a {
     text-decoration: none;
 }
 
-button,
-input,
-textarea {
-    font: inherit;
-    color: inherit;
-}
+/*button,*/
+/*input,*/
+/*textarea {*/
+/*    font: inherit;*/
+/*    color: inherit;*/
+/*}*/
 
 ::selection {
     background: rgba(63, 178, 123, 0.35);
 }
 
-:focus-visible {
-    outline: none;
-    box-shadow: var(--focus);
-    border-radius: 10px;
-}
+/*:focus-visible {*/
+/*    outline: none;*/
+/*    box-shadow: var(--focus);*/
+/*    border-radius: 10px;*/
+/*}*/
 
 /* === Layout === */
 .page {
@@ -332,6 +332,7 @@ width: max-content;
     font-weight: 400;
     letter-spacing: 0.2px;
 }
+
 
 @media screen and (max-width: 520px) {
     .credit {
