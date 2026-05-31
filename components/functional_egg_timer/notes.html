@@ -284,7 +284,7 @@
                 <a href="#step1" class="is-active">Step 1</a>
                 <a href="#step2">Step 2</a>
                 <a href="#step3">Step 3</a>
-                <span>Step 4</span>
+                <a href="#step4">Step 4</a>
             </nav>
         </div>
     </header>
@@ -1146,6 +1146,418 @@ console.log(`${logText} ${callDate.toLocaleTimeString()}`);</code></pre>
             <li><code class="inline-code">Stop</code> меняет состояние обратно и останавливает интервал.</li>
             <li><code class="inline-code">tickTimer()</code> уменьшает оставшееся время и обновляет экран.</li>
             <li>Когда таймер доходит до <code class="inline-code">0</code>, он останавливается и пишет в консоль время завершения.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step4">
+        <h2>Step 4: Поворот, 60 секунд, состояние Call и звуки</h2>
+        <p>
+            На этом шаге таймер стал почти полноценным: шкала начала управлять временем, обратный отсчет начал
+            синхронно крутить циферблат назад, появилось отдельное состояние звонка и подключились звуки из
+            оригинального CodePen.
+        </p>
+
+        <div class="callout warning">
+            Важная развилка проекта: оригинальный таймер рассчитан на <strong>60 минут</strong>, а в этой учебной
+            версии делаем максимум <strong>60 секунд</strong>. Поэтому формулы пересчета поворота отличаются от
+            оригинала.
+        </div>
+
+        <h3>Поворот шкалы и выбранное время</h3>
+        <p>
+            Мы храним поворот в переменной <code class="inline-code">currentRotation</code>. Это обычное число в
+            градусах. Для нашей версии правило простое:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Модель 60 секунд</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>360 градусов = 60 секунд
+6 градусов = 1 секунда
+
+0 градусов = 0 секунд
+30 градусов = 5 секунд
+180 градусов = 30 секунд
+360 градусов = 60 секунд</code></pre>
+        </div>
+
+        <p>
+            Поэтому при ручной прокрутке делаем перевод из градусов в секунды через деление на
+            <code class="inline-code">6</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">rotation -> seconds</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function updateRotation(rotation) {
+    currentRotation = clamp(rotation, 0, 360);
+    renderRotation();
+
+    const seconds = Math.round(currentRotation / 6);
+
+    setTimerTime(seconds);
+    egg.classList.remove("ringing");
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">clamp(rotation, 0, 360)</code> не дает выйти ниже 0 и выше 60 секунд.</li>
+            <li><code class="inline-code">currentRotation / 6</code> переводит градусы в секунды.</li>
+            <li><code class="inline-code">Math.round</code> округляет значение до ближайшей целой секунды.</li>
+            <li><code class="inline-code">setTimerTime(seconds)</code> записывает выбранное время в <code class="inline-code">selectedSeconds</code> и <code class="inline-code">remainingSeconds</code>.</li>
+        </ul>
+
+        <h3>Обратная синхронизация: время обратно в поворот</h3>
+        <p>
+            Когда таймер уже запущен, он каждую секунду уменьшает
+            <code class="inline-code">remainingSeconds</code>. Но одной цифры на экране мало: шкала тоже должна
+            двигаться назад. Для этого нужна обратная формула.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">seconds -> rotation</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function syncRotationToTime() {
+    currentRotation = remainingSeconds * 6;
+    renderRotation();
+}</code></pre>
+        </div>
+
+        <p>
+            Здесь уже не делим, а умножаем. Если осталось 10 секунд, шкала должна быть на
+            <code class="inline-code">60deg</code>. Если осталось 60 секунд, шкала должна быть на
+            <code class="inline-code">360deg</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Проверка формулы</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>4 секунды * 6 = 24 градуса
+30 секунд * 6 = 180 градусов
+54 секунды * 6 = 324 градуса
+60 секунд * 6 = 360 градусов</code></pre>
+        </div>
+
+        <div class="callout">
+            Ошибка, из-за которой шкала двигалась только внутри одного деления: была старая формула
+            <code class="inline-code">remainingSeconds / 10</code>. Для 60 секунд она давала
+            <code class="inline-code">60 / 10 = 6deg</code>, то есть весь таймер сжимался до одного маленького
+            деления.
+        </div>
+
+        <h3>Почему в CSS уходит минус</h3>
+        <p>
+            В коде храним <code class="inline-code">currentRotation</code> как положительное число:
+            <code class="inline-code">0..360</code>. Но визуально шкалу нужно повернуть в другую сторону, поэтому
+            в CSS-переменную отправляем значение с минусом.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">renderRotation</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function renderRotation() {
+    numbersContainer.style.setProperty("--rotation", `${-currentRotation}deg`);
+}</code></pre>
+        </div>
+
+        <p>
+            Это разделяет две вещи: в JS удобная модель <code class="inline-code">0..360</code>, а в CSS нужное
+            направление визуального поворота.
+        </p>
+
+        <h3>Pointer-события и ручное вращение</h3>
+        <p>
+            Для прокрутки шкалы используются pointer-события. Они работают для мыши, пальца и стилуса. Главная
+            идея: запомнить точку старта и посчитать, насколько пользователь сдвинул указатель.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">deltaX и новый поворот</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>dragStartX = event.clientX;
+dragStartRotation = currentRotation;
+
+const deltaX = event.clientX - dragStartX;
+const rotation = dragStartRotation - deltaX;
+
+updateRotation(rotation);</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">event.clientX</code> - координата указателя по горизонтали в окне браузера.</li>
+            <li><code class="inline-code">dragStartX</code> - где началось перетаскивание.</li>
+            <li><code class="inline-code">deltaX</code> - насколько указатель ушел от стартовой точки.</li>
+            <li><code class="inline-code">dragStartRotation</code> - какой поворот был в момент начала движения.</li>
+            <li><code class="inline-code">dragStartRotation - deltaX</code> дает ощущение нужного направления вращения.</li>
+        </ul>
+
+        <p>
+            <code class="inline-code">setPointerCapture(event.pointerId)</code> закрепляет pointer-событие за
+            элементом. Это нужно, чтобы движение не обрывалось, если указатель вышел за пределы верхней части яйца.
+            После окончания движения вызываем <code class="inline-code">releasePointerCapture(event.pointerId)</code>.
+        </p>
+
+        <h3>Отдельное состояние звонка: <code class="inline-code">isCalling</code></h3>
+        <p>
+            <code class="inline-code">isRunning</code> отвечает только за обратный отсчет. Когда таймер дошел до
+            нуля, отсчет уже не идет, но приложение еще находится в состоянии звонка. Поэтому нужен второй флаг:
+            <code class="inline-code">isCalling</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Два разных состояния</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>let isRunning = false;
+let isCalling = false;</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Клик по кнопке</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>timerButton.addEventListener("click", () =&gt; {
+    if (isCalling) {
+        stopCall();
+        return;
+    }
+
+    if (isRunning) {
+        stopTimer();
+    } else {
+        startTimer();
+    }
+});</code></pre>
+        </div>
+
+        <p>
+            Проверка <code class="inline-code">isCalling</code> должна идти первой. Если таймер звонит, следующий
+            клик должен выключить звонок, а не запускать новый отсчет.
+        </p>
+
+        <h3>Финиш таймера и выключение Call</h3>
+        <p>
+            Когда <code class="inline-code">remainingSeconds</code> дошел до нуля, обычный интервал нужно остановить,
+            а потом включить состояние звонка.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">finishTimer</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function finishTimer() {
+    stopTimer();
+    isCalling = true;
+
+    timerButton.textContent = "Stop call";
+    timerButton.classList.add("stop");
+    timerButton.disabled = false;
+
+    timerAlarmSound.play();
+    egg.classList.add("ringing");
+}</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">stopCall</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function stopCall() {
+    isCalling = false;
+    egg.classList.remove("ringing");
+    timerAlarmSound.stop();
+
+    timerButton.textContent = "Start";
+    timerButton.classList.remove("stop");
+    updateButtonState();
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">stopTimer()</code> останавливает обычный отсчет и тиканье.</li>
+            <li><code class="inline-code">finishTimer()</code> включает состояние звонка.</li>
+            <li><code class="inline-code">stopCall()</code> выключает звонок и возвращает кнопку в обычное состояние.</li>
+            <li><code class="inline-code">timerButton.disabled = false</code> нужен, чтобы кнопку можно было нажать даже при нуле.</li>
+        </ul>
+
+        <h3>Howler и <code class="inline-code">Howl</code></h3>
+        <p>
+            <code class="inline-code">Howl</code> - не встроенный объект JavaScript. Он появляется только после
+            подключения библиотеки Howler. Поэтому скрипт библиотеки должен стоять выше нашего
+            <code class="inline-code">script.js</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Подключение Howler</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"&gt;&lt;/script&gt;
+&lt;script src="./script.js"&gt;&lt;/script&gt;</code></pre>
+        </div>
+
+        <p>
+            Браузер читает HTML сверху вниз. Если сначала подключить наш файл, а уже потом Howler, то
+            <code class="inline-code">new Howl(...)</code> упадет с ошибкой
+            <code class="inline-code">Howl is not defined</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Три звука таймера</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const timerWindingSound = new Howl({
+    src: ["https://assets.codepen.io/4175254/timer-winding_1.mp3"],
+});
+
+const timerAlarmSound = new Howl({
+    src: ["https://assets.codepen.io/4175254/timer-alarm.mp3"],
+});
+
+const timerTickingSound = new Howl({
+    src: ["https://assets.codepen.io/4175254/timer-ticking.mp3"],
+    loop: true,
+});</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">timerWindingSound</code> - щелчки при ручной прокрутке шкалы.</li>
+            <li><code class="inline-code">timerTickingSound</code> - фоновое тиканье во время запущенного отсчета.</li>
+            <li><code class="inline-code">timerAlarmSound</code> - звонок, когда таймер дошел до нуля.</li>
+            <li><code class="inline-code">loop: true</code> значит, что звук будет повторяться по кругу, пока его не остановить.</li>
+        </ul>
+
+        <h3>Почему звук по делениям - это Winding, а не Ticking</h3>
+        <p>
+            В оригинале щелчки при ручной прокрутке делает не
+            <code class="inline-code">timerTickingSound</code>. Их делает
+            <code class="inline-code">timerWindingSound</code>. Это видно по условию, где проверяется переход на
+            новое деление.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Идея из оригинала</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>if (Math.abs(adjustedRotation - lastRotation) &gt;= 6) {
+    timerWindingSound.play();
+    navigator.vibrate?.(50);
+    lastRotation = adjustedRotation;
+}</code></pre>
+        </div>
+
+        <p>
+            Число <code class="inline-code">6</code> здесь не случайное. В исходной шкале 6 градусов - это одно
+            крупное деление. В нашей версии 6 градусов - это одна секунда.
+        </p>
+
+        <h3>Разбор <code class="inline-code">playWindingSoundOnSecondChange()</code></h3>
+        <p>
+            Эта функция нужна, чтобы звук срабатывал не на каждый пиксель движения, а только когда выбранная
+            секунда реально изменилась.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Звук при переходе на новое деление</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>let lastWindingSecond = 0;
+
+function playWindingSoundOnSecondChange() {
+    const currentSecond = Math.round(currentRotation / 6);
+
+    if (currentSecond === lastWindingSecond) {
+        return;
+    }
+
+    timerWindingSound.play();
+    navigator.vibrate?.(50);
+    lastWindingSecond = currentSecond;
+}</code></pre>
+        </div>
+
+        <p>
+            Построчно:
+        </p>
+
+        <ul>
+            <li><code class="inline-code">lastWindingSecond</code> хранит последнюю секунду, на которой звук уже сыграл.</li>
+            <li><code class="inline-code">currentRotation / 6</code> переводит текущий поворот в секунды.</li>
+            <li><code class="inline-code">Math.round(...)</code> округляет результат до ближайшей секунды.</li>
+            <li>Если <code class="inline-code">currentSecond === lastWindingSecond</code>, значит мы все еще внутри того же деления, звук не нужен.</li>
+            <li><code class="inline-code">return</code> досрочно выходит из функции.</li>
+            <li><code class="inline-code">timerWindingSound.play()</code> проигрывает щелчок.</li>
+            <li><code class="inline-code">navigator.vibrate?.(50)</code> включает вибрацию на 50 миллисекунд, если устройство поддерживает вибрацию.</li>
+            <li><code class="inline-code">lastWindingSecond = currentSecond</code> запоминает новое озвученное деление.</li>
+        </ul>
+
+        <div class="callout">
+            <code class="inline-code">?.</code> называется optional chaining. В выражении
+            <code class="inline-code">navigator.vibrate?.(50)</code> оно значит: если метод
+            <code class="inline-code">vibrate</code> существует, вызови его; если не существует, просто ничего не делай
+            и не падай с ошибкой.
+        </div>
+
+        <h3>Где вызывается звук по делениям</h3>
+        <p>
+            Начальное деление запоминается в момент <code class="inline-code">pointerdown</code>. Потом при каждом
+            <code class="inline-code">pointermove</code> сначала обновляется поворот, а затем проверяется, перешли
+            ли мы на новую секунду.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">pointerdown / pointermove</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>eggTop.addEventListener("pointerdown", (event) =&gt; {
+    isDragging = true;
+    lastWindingSecond = Math.round(currentRotation / 6);
+    dragStartX = event.clientX;
+    dragStartRotation = currentRotation;
+});
+
+eggTop.addEventListener("pointermove", (event) =&gt; {
+    if (!isDragging) {
+        return;
+    }
+
+    const deltaX = event.clientX - dragStartX;
+    const rotation = dragStartRotation - deltaX;
+
+    updateRotation(rotation);
+    playWindingSoundOnSecondChange();
+});</code></pre>
+        </div>
+
+        <h3>Итог Step 4</h3>
+        <ol>
+            <li>Шкала теперь работает как таймер на 60 секунд, а не на 60 минут.</li>
+            <li>Поворот в градусах переводится в секунды через <code class="inline-code">currentRotation / 6</code>.</li>
+            <li>Оставшееся время переводится обратно в поворот через <code class="inline-code">remainingSeconds * 6</code>.</li>
+            <li>Состояние <code class="inline-code">isCalling</code> отделяет звонок от обычного запущенного таймера.</li>
+            <li>Howler подключается отдельным скриптом до <code class="inline-code">script.js</code>.</li>
+            <li><code class="inline-code">timerTickingSound</code> играет во время отсчета, <code class="inline-code">timerWindingSound</code> щелкает при прокрутке, <code class="inline-code">timerAlarmSound</code> звонит на нуле.</li>
+            <li>Звук прокрутки должен срабатывать при смене деления, а не на каждый пиксель движения.</li>
         </ol>
     </section>
 </main>
