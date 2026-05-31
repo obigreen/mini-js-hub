@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerId = null;
     // Флаг: таймер сейчас запущен или нет:
     let isRunning = false;
+
+    let isCalling = false;
     // Флаг: пользователь сейчас тянет шкалу мышкой/пальцем или нет:
     let isDragging = false;
     // X-координата, с которой началось движение:
@@ -34,6 +36,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let dragStartRotation = 0;
     // Текущий поворот шкалы в градусах:
     let currentRotation = 0;
+    // Последнее деление, на котором уже сыграл звук заводки.
+    // Нужно, чтобы звук не запускался на каждый пиксель движения мыши.
+    let lastWindingSecond = 0;
+
+
+
+
+    const timerWindingSound = new Howl({
+        src: ["https://assets.codepen.io/4175254/timer-winding_1.mp3"],
+    });
+
+    const timerAlarmSound = new Howl({
+        src: ["https://assets.codepen.io/4175254/timer-alarm.mp3"],
+        loop: true,
+    });
+
+    const timerTickingSound = new Howl({
+        src: ["https://assets.codepen.io/4175254/timer-ticking.mp3"],
+        loop: true,
+    });
 
 
     function formatTime(totalSeconds) {
@@ -65,6 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     timerButton.addEventListener("click", () => {
+
+        if (isCalling) {
+            stopCall();
+            return;
+
+        }
+
         if (isRunning) {
             stopTimer();
         } else {
@@ -87,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         isRunning = true;
         egg.classList.remove("ringing");
+        timerTickingSound.play();
         timerButton.textContent = "Stop";
         timerButton.classList.add("stop");
         timerId = setInterval(() => {
@@ -97,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function stopTimer() {
         isRunning = false;
         egg.classList.remove("ringing");
+        timerTickingSound.stop();
         timerButton.textContent = "Start";
         timerButton.classList.remove("stop");
         clearInterval(timerId);
@@ -119,10 +150,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function finishTimer() {
         stopTimer();
+        isCalling = true;
+        timerButton.textContent = "Stop call";
+        timerButton.classList.add("stop");
+        timerButton.disabled = false;
+        timerAlarmSound.play();
         egg.classList.add("ringing");
         const logText = "CALL!!!";
         const callDate = new Date();
         console.log(`${logText} ${callDate.toLocaleTimeString()}`);
+    }
+
+    function stopCall() {
+        isCalling = false;
+        egg.classList.remove("ringing");
+        timerAlarmSound.stop();
+        timerButton.textContent = "Start";
+        timerButton.classList.remove("stop");
+        updateButtonState();
     }
 
 
@@ -147,16 +192,24 @@ document.addEventListener('DOMContentLoaded', () => {
     eggTop.append(numbersContainer);
     egg.insertBefore(eggTop, eggCenter);
 
+    function renderRotation() {
+        numbersContainer.style.setProperty("--rotation", `${-currentRotation}deg`);
+    }
+
 
     function updateRotation(rotation) {
         currentRotation = clamp(rotation, 0, 360);
-        numbersContainer.style.setProperty("--rotation", `${currentRotation}deg`);
+        renderRotation();
 
-        const minutes = Math.round(currentRotation / 6);
-        const seconds = minutes * 60;
+        const seconds = Math.round(currentRotation / 6);
 
         setTimerTime(seconds);
         egg.classList.remove("ringing");
+
+        if(isCalling) {
+            stopCall();
+        }
+
     }
 
     function clamp(value, min, max) {
@@ -164,20 +217,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function syncRotationToTime() {
-        currentRotation = remainingSeconds / 10;
-        numbersContainer.style.setProperty("--rotation", `${currentRotation}deg`);
+        currentRotation = remainingSeconds * 6;
+        renderRotation();
     }
 
-    
+    function playWindingSoundOnSecondChange() {
+        const currentSecond = Math.round(currentRotation / 6);
+
+        if (currentSecond === lastWindingSecond) {
+            return;
+        }
+
+        timerWindingSound.play();
+        navigator.vibrate?.(50);
+        lastWindingSecond = currentSecond;
+    }
+
 
     //pointerdown - событие pointer для отработки все взаимодействий
     eggTop.addEventListener("pointerdown", (event) => {
+
+        if (isRunning || isCalling) {
+            return;
+        }
 
         if (isRunning) {
             return;
         }
 
         isDragging = true;
+        lastWindingSecond = Math.round(currentRotation / 6);
         dragStartX = event.clientX;
         dragStartRotation = currentRotation;
         eggTop.classList.add('dragged');
@@ -192,8 +261,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const deltaX = event.clientX - dragStartX;
-        const rotation = dragStartRotation + deltaX;
+        const rotation = dragStartRotation - deltaX;
         updateRotation(rotation);
+        playWindingSoundOnSecondChange();
 
     })
 
