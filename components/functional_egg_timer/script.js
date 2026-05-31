@@ -26,6 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerId = null;
     // Флаг: таймер сейчас запущен или нет:
     let isRunning = false;
+    // Флаг: пользователь сейчас тянет шкалу мышкой/пальцем или нет:
+    let isDragging = false;
+    // X-координата, с которой началось движение:
+    let dragStartX = 0;
+    // Поворот шкалы на момент начала движения:
+    let dragStartRotation = 0;
+    // Текущий поворот шкалы в градусах:
+    let currentRotation = 0;
 
 
     function formatTime(totalSeconds) {
@@ -53,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timerButton.disabled = selectedSeconds === 0;
     }
 
-    setTimerTime(4);
+    setTimerTime(0);
 
 
     timerButton.addEventListener("click", () => {
@@ -70,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (remainingSeconds === 0) {
             remainingSeconds = selectedSeconds;
             updateTimeDisplay();
+            syncRotationToTime();
         }
 
         if (remainingSeconds === 0 || timerId !== null) {
@@ -77,9 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         isRunning = true;
+        egg.classList.remove("ringing");
         timerButton.textContent = "Stop";
         timerButton.classList.add("stop");
-
         timerId = setInterval(() => {
             tickTimer();
         }, 1000);
@@ -87,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function stopTimer() {
         isRunning = false;
+        egg.classList.remove("ringing");
         timerButton.textContent = "Start";
         timerButton.classList.remove("stop");
         clearInterval(timerId);
@@ -100,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         remainingSeconds = remainingSeconds - 1;
         updateTimeDisplay();
+        syncRotationToTime();
 
         if (remainingSeconds === 0) {
             finishTimer();
@@ -108,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function finishTimer() {
         stopTimer();
+        egg.classList.add("ringing");
         const logText = "CALL!!!";
         const callDate = new Date();
         console.log(`${logText} ${callDate.toLocaleTimeString()}`);
@@ -134,6 +146,64 @@ document.addEventListener('DOMContentLoaded', () => {
     numbersContainer.innerHTML = numberHtml.join("");
     eggTop.append(numbersContainer);
     egg.insertBefore(eggTop, eggCenter);
+
+
+    function updateRotation(rotation) {
+        currentRotation = clamp(rotation, 0, 360);
+        numbersContainer.style.setProperty("--rotation", `${currentRotation}deg`);
+
+        const minutes = Math.round(currentRotation / 6);
+        const seconds = minutes * 60;
+
+        setTimerTime(seconds);
+        egg.classList.remove("ringing");
+    }
+
+    function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    function syncRotationToTime() {
+        currentRotation = remainingSeconds / 10;
+        numbersContainer.style.setProperty("--rotation", `${currentRotation}deg`);
+    }
+
+    
+
+    //pointerdown - событие pointer для отработки все взаимодействий
+    eggTop.addEventListener("pointerdown", (event) => {
+
+        if (isRunning) {
+            return;
+        }
+
+        isDragging = true;
+        dragStartX = event.clientX;
+        dragStartRotation = currentRotation;
+        eggTop.classList.add('dragged');
+        eggTop.setPointerCapture(event.pointerId);
+
+    })
+
+    eggTop.addEventListener("pointermove", (event) => {
+
+        if (!isDragging) {
+            return;
+        }
+
+        const deltaX = event.clientX - dragStartX;
+        const rotation = dragStartRotation + deltaX;
+        updateRotation(rotation);
+
+    })
+
+    eggTop.addEventListener("pointerup", (event) => {
+        isDragging = false;
+        eggTop.classList.remove("dragged");
+        eggTop.releasePointerCapture(event.pointerId);
+    });
+
+
 })
 
 
