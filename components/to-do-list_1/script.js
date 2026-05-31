@@ -10,10 +10,11 @@ $(function () {
         console.log("Остановись пока остановка не будет последней ☝");
         return;
     }
+
     loadTodos();
 
     function saveTodos() {
-        const todos = todoList.find(".todo-item").map(function (item) {
+        const todos = todoList.find(".todo-item").map(function () {
             const todoText = $(this).find(".todo-text");
 
             return {
@@ -27,8 +28,8 @@ $(function () {
     }
 
     function loadTodos() {
-        const savedTodos = localStorage.getItem(STORAGE_KEY);
 
+        const savedTodos = localStorage.getItem(STORAGE_KEY);
         if(!savedTodos) {
             return;
         }
