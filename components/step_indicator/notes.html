@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step Indicator Notes</title>
+    <style>
+        :root {
+            --bg: #151515;
+            --panel: #202020;
+            --panel-soft: #262626;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.70);
+            --border: rgba(255, 255, 255, 0.12);
+            --accent: #41b883;
+            --code-bg: #101312;
+            --danger: #ff7a59;
+            --radius: 14px;
+            --container: 980px;
+            --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            background:
+                    radial-gradient(900px 600px at 12% 0%, rgba(65, 184, 131, 0.18), transparent 55%),
+                    radial-gradient(700px 500px at 92% 18%, rgba(255, 122, 89, 0.10), transparent 55%),
+                    var(--bg);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+        }
+
+        code,
+        pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        .page {
+            width: min(100% - 32px, var(--container));
+            margin: 0 auto;
+            padding: 32px 0 56px;
+        }
+
+        .note-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            margin: 0 -16px 28px;
+            padding: 16px;
+            background: rgba(21, 21, 21, 0.86);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+        }
+
+        .note-header-inner {
+            width: min(100%, var(--container));
+            margin: 0 auto;
+        }
+
+        .note-kicker {
+            margin: 0 0 4px;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .note-title {
+            margin: 0 0 14px;
+            font-size: clamp(28px, 5vw, 46px);
+            line-height: 1.08;
+        }
+
+        .note-nav {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .note-nav a,
+        .note-nav span {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .note-nav a:hover,
+        .note-nav a.is-active {
+            border-color: rgba(65, 184, 131, 0.55);
+            background: rgba(65, 184, 131, 0.15);
+        }
+
+        .note-nav span {
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .note-section {
+            margin-top: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: rgba(32, 32, 32, 0.82);
+            box-shadow: var(--shadow);
+        }
+
+        .note-section h2 {
+            margin: 0 0 12px;
+            font-size: 26px;
+            line-height: 1.2;
+        }
+
+        .note-section h3 {
+            margin: 24px 0 8px;
+            font-size: 19px;
+            line-height: 1.25;
+        }
+
+        .note-section p {
+            margin: 10px 0;
+            color: var(--muted);
+        }
+
+        .note-section ul,
+        .note-section ol {
+            margin: 10px 0;
+            padding-left: 22px;
+            color: var(--muted);
+        }
+
+        .note-section li + li {
+            margin-top: 6px;
+        }
+
+        .note-section strong {
+            color: var(--text);
+        }
+
+        .inline-code {
+            padding: 2px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            font-size: 0.94em;
+        }
+
+        .callout {
+            margin: 16px 0;
+            padding: 14px 16px;
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            background: rgba(65, 184, 131, 0.10);
+            color: var(--text);
+        }
+
+        .callout.warning {
+            border-left-color: var(--danger);
+            background: rgba(255, 122, 89, 0.10);
+        }
+
+        .code-card {
+            margin: 16px 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 12px;
+            background: var(--code-bg);
+        }
+
+        .code-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .code-card-title {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .copy-button {
+            border: 1px solid rgba(65, 184, 131, 0.45);
+            border-radius: 8px;
+            padding: 6px 10px;
+            background: rgba(65, 184, 131, 0.12);
+            color: var(--text);
+            cursor: pointer;
+            font: inherit;
+            font-size: 13px;
+        }
+
+        .copy-button:hover {
+            background: rgba(65, 184, 131, 0.20);
+        }
+
+        pre {
+            margin: 0;
+            padding: 16px;
+            overflow-x: auto;
+            color: #d6f5e4;
+            font-size: 14px;
+            line-height: 1.55;
+            white-space: pre;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .mini-card {
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .mini-card h3 {
+            margin-top: 0;
+        }
+
+        @media (max-width: 720px) {
+            .page {
+                width: min(100% - 20px, var(--container));
+                padding-top: 16px;
+            }
+
+            .note-header {
+                margin: 0 -10px 18px;
+                padding: 12px 10px;
+            }
+
+            .note-section {
+                padding: 18px;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <header class="note-header">
+        <div class="note-header-inner">
+            <p class="note-kicker">Step Indicator</p>
+            <h1 class="note-title">Конспект разработки</h1>
+            <nav class="note-nav" aria-label="Навигация по шагам">
+                <a href="#step1" class="is-active">Step 1</a>
+                <span>Step 2</span>
+                <span>Step 3</span>
+            </nav>
+        </div>
+    </header>
+
+    <section class="note-section" id="step1">
+        <h2>Step 1: Разметка, CSS-основа и состояния прогресс-бара</h2>
+        <p>
+            На первом этапе собрали статичную часть компонента Step Indicator по мотивам CodePen Jon Kantner.
+            В этом проекте не подключаем SCSS и не ставим зависимости: оригинальная идея переносится в обычные
+            <code class="inline-code">index.html</code>, <code class="inline-code">style.css</code> и позже
+            <code class="inline-code">script.js</code>.
+        </p>
+
+        <div class="callout">
+            Главная мысль этапа: HTML задает точки и линии, CSS отвечает за геометрию и визуальные состояния,
+            а будущий JS должен только переключать классы <code class="inline-code">step_current</code> и
+            <code class="inline-code">step_done</code>.
+        </div>
+
+        <h3>HTML-структура</h3>
+        <p>
+            Внутри формы появился блок <code class="inline-code">.steps</code>. Он содержит пять шагов
+            <code class="inline-code">.step</code>, а между соседними шагами стоят линии
+            <code class="inline-code">.step_progress</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Схема DOM</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>&lt;div class="steps"&gt;
+    &lt;div class="step" data-step="0"&gt;...&lt;/div&gt;
+    &lt;div class="step_progress"&gt;&lt;/div&gt;
+    &lt;div class="step" data-step="1"&gt;...&lt;/div&gt;
+    &lt;div class="step_progress"&gt;&lt;/div&gt;
+    ...
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">data-step</code> начинается с <code class="inline-code">0</code>, потому что JS удобнее считать шаги как индексы: 0, 1, 2, 3, 4.</li>
+            <li><code class="inline-code">data-action="prev"</code> и <code class="inline-code">data-action="next"</code> нужны будущей логике: обработчик клика сможет понять действие не по тексту кнопки, а по атрибуту.</li>
+            <li>Классы были названы по-своему: <code class="inline-code">.step</code>, <code class="inline-code">.step_number</code>, <code class="inline-code">.step_name</code>, <code class="inline-code">.step_progress</code>. Это нормально, если CSS и JS используют те же имена.</li>
+        </ul>
+
+        <h3>CSS-переменные и HSL</h3>
+        <p>
+            Переменные компонента положили в <code class="inline-code">.default</code>, а не в
+            <code class="inline-code">:root</code>. Так палитра и настройки анимации относятся только к этому
+            компоненту и не меняют весь хаб.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Component variables</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.default {
+    --step-hue: 223;
+    --step-primary: hsl(var(--step-hue), 90%, 70%);
+    --step-muted: hsl(var(--step-hue), 10%, 40%);
+    --step-panel: hsl(var(--step-hue), 10%, 20%);
+    --step-duration: 0.3s;
+    --step-easing: cubic-bezier(0.65, 0, 0.35, 1);
+}</code></pre>
+        </div>
+
+        <div class="two-column">
+            <div class="mini-card">
+                <h3><code class="inline-code">--step-hue</code></h3>
+                <p>
+                    Это не готовый цвет, а число оттенка для <code class="inline-code">hsl()</code>.
+                    Поэтому пишем <code class="inline-code">223</code>, а не <code class="inline-code">#2e3138</code>.
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3>Проценты в HSL</h3>
+                <p>
+                    В <code class="inline-code">hsl(223, 90%, 70%)</code> проценты относятся к цвету:
+                    <code class="inline-code">90%</code> - насыщенность, <code class="inline-code">70%</code> - светлота.
+                    Это не ширина и не размер элемента.
+                </p>
+            </div>
+        </div>
+
+        <p>
+            Смысл такого подхода: один раз меняем оттенок <code class="inline-code">--step-hue</code>, и вся палитра
+            компонента перестраивается вокруг нового цвета. Если нужен готовый hex-цвет, переменная должна называться
+            по смыслу, например <code class="inline-code">--step-panel: #2e3138</code>, а не
+            <code class="inline-code">--step-hue</code>.
+        </p>
+
+        <h3>Flex-линия между шагами</h3>
+        <p>
+            Шаги находятся в горизонтальном flex-контейнере. Круги имеют фиксированный размер, а линии между ними
+            должны занимать свободное пространство.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Connector as flex item</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_progress {
+    flex: 1;
+    height: 0.125em;
+    background-color: hsl(var(--step-hue), 10%, 40%);
+}</code></pre>
+        </div>
+
+        <p>
+            Здесь важнее <code class="inline-code">flex: 1</code>, а не
+            <code class="inline-code">width: 100%</code>. Линия является flex-элементом между двумя шагами,
+            поэтому ей нужно не "быть шириной 100% родителя", а "забрать доступное место между соседями".
+        </p>
+
+        <h3>Абсолютная подпись и неожиданный max-width</h3>
+        <p>
+            Подпись шага вынесена через <code class="inline-code">position: absolute</code>, чтобы она висела под
+            кругом и не раздувала сам flex-ряд.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Step name positioning</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step {
+    position: relative;
+}
+
+.step_name {
+    position: absolute;
+    max-width: unset;
+    width: max-content;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}</code></pre>
+        </div>
+
+        <div class="callout warning">
+            Важный вопрос этапа: почему ширина круга <code class="inline-code">.step_number</code> влияла на ширину
+            подписи <code class="inline-code">.step_name</code>, хотя подпись была absolute?
+        </div>
+
+        <p>
+            Ответ оказался в общем файле <code class="inline-code">common.css</code>. Там есть глобальное правило:
+            <code class="inline-code">* { max-width: 100%; }</code>. Абсолютное позиционирование убирает элемент из
+            обычного потока, но не отменяет все ограничения. Поэтому <code class="inline-code">max-width: 100%</code>
+            продолжал ограничивать подпись шириной родителя <code class="inline-code">.step</code>.
+        </p>
+
+        <p>
+            А родитель <code class="inline-code">.step</code> получал ширину в основном от круга
+            <code class="inline-code">.step_number</code>. В итоге круг шириной 50px делал родителя примерно 50px,
+            а глобальный <code class="inline-code">max-width: 100%</code> не давал подписи быть шире этого размера.
+            Поэтому добавили <code class="inline-code">max-width: unset</code> и
+            <code class="inline-code">width: max-content</code>.
+        </p>
+
+        <h3>State-классы: мост между CSS и будущим JS</h3>
+        <p>
+            До написания JS подготовили классы состояний. Это важный порядок: сначала CSS должен знать, как выглядит
+            состояние, а потом JS будет только выбирать, какому шагу это состояние дать.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Step states</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_current .step_number,
+.step_done .step_number {
+    background-color: var(--step-primary);
+}
+
+.step_current .step_name,
+.step_done .step_name {
+    color: hsl(var(--step-hue), 10%, 90%);
+    font-weight: bold;
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">.step_current</code> - текущий шаг, на котором находится пользователь.</li>
+            <li><code class="inline-code">.step_done</code> - шаг, который уже пройден.</li>
+            <li>В HTML эти классы не должны оставаться вручную. Они нужны для проверки CSS, а дальше их будет ставить JS.</li>
+        </ul>
+
+        <h3>Псевдоэлемент для заполнения линии</h3>
+        <p>
+            Сама <code class="inline-code">.step_progress</code> остается серым фоном линии. Заполненная синяя часть
+            рисуется поверх через <code class="inline-code">::before</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Progress fill</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_progress {
+    position: relative;
+    overflow: hidden;
+}
+
+.step_progress::before {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: var(--step-primary);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--step-duration) var(--step-easing);
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">scaleX(0)</code> сжимает заполненную линию только по горизонтали.
+            Это точнее, чем <code class="inline-code">scale(0)</code>, потому что <code class="inline-code">scale(0)</code>
+            сжимает и ширину, и высоту. Для линии нужен переход <code class="inline-code">scaleX(0)</code> ->
+            <code class="inline-code">scaleX(1)</code>.
+        </p>
+
+        <h3>Соседний селектор</h3>
+        <p>
+            Заполнение линии связано с предыдущим шагом через селектор <code class="inline-code">+</code>.
+            Он выбирает следующий соседний элемент.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Done step fills next connector</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_done + .step_progress::before {
+    transform: scaleX(1);
+}</code></pre>
+        </div>
+
+        <p>
+            В нашем HTML после каждого <code class="inline-code">.step</code> сразу идет
+            <code class="inline-code">.step_progress</code>. Поэтому правило читается так:
+            если шаг уже <code class="inline-code">done</code>, заполни линию, которая стоит сразу после него.
+        </p>
+
+        <h3>Что осталось на потом</h3>
+        <p>
+            <code class="inline-code">cubic-bezier(0.65, 0, 0.35, 1)</code> пока зафиксирован как настройка скорости
+            перехода. Подробный разбор лучше делать на следующем CSS-динамическом этапе, когда будет видно движение:
+            это кривая, которая управляет тем, как анимация разгоняется и тормозит между началом и концом.
+        </p>
+
+        <p>
+            <code class="inline-code">appearance: none</code> у кнопки убирает системный стиль браузера, чтобы наша
+            кнопка выглядела одинаковее в разных браузерах и ОС. Это не логика компонента, а нормализация внешнего вида.
+        </p>
+
+        <h3>Итог Step 1</h3>
+        <ol>
+            <li>Собрана HTML-структура: шаги, линии между шагами и кнопки управления.</li>
+            <li><code class="inline-code">data-step</code> и <code class="inline-code">data-action</code> подготовлены под будущую JS-логику.</li>
+            <li>CSS-переменные вынесены в область компонента <code class="inline-code">.default</code>.</li>
+            <li>Разобрано, что <code class="inline-code">--step-hue</code> - это число оттенка для HSL, а проценты в HSL относятся к насыщенности и светлоте.</li>
+            <li>Линия между шагами сделана flex-элементом через <code class="inline-code">flex: 1</code>.</li>
+            <li>Подпись шага позиционируется абсолютно относительно <code class="inline-code">.step</code>.</li>
+            <li>Проблема с шириной подписи была из-за глобального <code class="inline-code">max-width: 100%</code> из <code class="inline-code">common.css</code>.</li>
+            <li>Подготовлены состояния <code class="inline-code">.step_current</code> и <code class="inline-code">.step_done</code>.</li>
+            <li>Заполнение линии сделано через <code class="inline-code">.step_progress::before</code>, <code class="inline-code">scaleX()</code> и соседний селектор <code class="inline-code">+</code>.</li>
+            <li>Следующий шаг: JS-логика, которая будет хранить номер текущего шага, переключать классы и включать/выключать кнопки.</li>
+        </ol>
+    </section>
+</main>
+
+<script>
+    const copyFallback = (text) => {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        document.body.append(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+    };
+
+    document.querySelectorAll(".code-card").forEach((card) => {
+        const button = card.querySelector(".copy-button");
+        const code = card.querySelector("code");
+
+        if (!button || !code) {
+            return;
+        }
+
+        button.addEventListener("click", async () => {
+            const text = code.innerText;
+
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    copyFallback(text);
+                }
+
+                button.textContent = "Copied";
+            } catch (error) {
+                copyFallback(text);
+                button.textContent = "Copied";
+            }
+
+            setTimeout(() => {
+                button.textContent = "Copy";
+            }, 1200);
+        });
+    });
+</script>
+</body>
+</html>
