@@ -248,6 +248,109 @@
             margin-top: 0;
         }
 
+        .demo-strip {
+            display: grid;
+            gap: 14px;
+            margin: 16px 0;
+        }
+
+        .demo-box {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .demo-title {
+            margin: 0 0 10px;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .mini-step-row,
+        .mini-step-column {
+            display: flex;
+            gap: 0;
+            align-items: center;
+        }
+
+        .mini-step-column {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .mini-step {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .mini-dot {
+            display: grid;
+            place-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.20);
+            color: #101312;
+            font-weight: 800;
+        }
+
+        .mini-dot.active {
+            background: #7a9bff;
+            box-shadow: 0 0 0 4px rgba(122, 155, 255, 0.28);
+        }
+
+        .mini-line-x,
+        .mini-line-y {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        .mini-line-x {
+            flex: 1;
+            min-width: 74px;
+            height: 4px;
+        }
+
+        .mini-line-y {
+            width: 4px;
+            height: 34px;
+            margin-left: 15px;
+        }
+
+        .mini-line-x::before,
+        .mini-line-y::before {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #7a9bff;
+        }
+
+        .mini-line-x.empty::before {
+            transform: scaleX(0);
+            transform-origin: 0 50%;
+        }
+
+        .mini-line-x.filled::before {
+            transform: scaleX(1);
+            transform-origin: 0 50%;
+        }
+
+        .mini-line-y.empty::before {
+            transform: scaleY(0);
+            transform-origin: 50% 0;
+        }
+
+        .mini-line-y.filled::before {
+            transform: scaleY(1);
+            transform-origin: 50% 0;
+        }
+
         @media (max-width: 720px) {
             .page {
                 width: min(100% - 20px, var(--container));
@@ -277,8 +380,8 @@
             <h1 class="note-title">Конспект разработки</h1>
             <nav class="note-nav" aria-label="Навигация по шагам">
                 <a href="#step1" class="is-active">Step 1</a>
-                <span>Step 2</span>
-                <span>Step 3</span>
+                <a href="#step2">Step 2</a>
+                <a href="#step3">CSS deep dive</a>
             </nav>
         </div>
     </header>
@@ -552,6 +655,811 @@
             <li>Подготовлены состояния <code class="inline-code">.step_current</code> и <code class="inline-code">.step_done</code>.</li>
             <li>Заполнение линии сделано через <code class="inline-code">.step_progress::before</code>, <code class="inline-code">scaleX()</code> и соседний селектор <code class="inline-code">+</code>.</li>
             <li>Следующий шаг: JS-логика, которая будет хранить номер текущего шага, переключать классы и включать/выключать кнопки.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step2">
+        <h2>Step 2: JS-логика переключения шагов</h2>
+        <p>
+            На втором этапе компонент стал интерактивным: кнопки <code class="inline-code">Previous</code> и
+            <code class="inline-code">Next</code> меняют индекс текущего шага, а JS заново расставляет CSS-классы
+            <code class="inline-code">step_done</code> и <code class="inline-code">step_current</code>.
+        </p>
+
+        <div class="callout">
+            Главная мысль JS-этапа: JavaScript не рисует прогресс-бар напрямую. Он только хранит число
+            <code class="inline-code">currentStep</code> и переключает классы. Вся визуальная динамика находится в CSS.
+        </div>
+
+        <h3>Поиск элементов</h3>
+        <p>
+            Сначала нашли контейнер, шаги и кнопки. Для кнопок использовали не класс
+            <code class="inline-code">.btn</code>, а атрибут <code class="inline-code">data-action</code>, потому что
+            кнопок две и у каждой своя команда.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">DOM references</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>const stepsContainer = document.querySelector(".steps");
+const stepItems = document.querySelectorAll(".step");
+const prevBtn = document.querySelector('[data-action="prev"]');
+const nextBtn = document.querySelector('[data-action="next"]');</code></pre>
+        </div>
+
+        <p>
+            Ошибка, которая возникла по пути: попытка искать кнопки через
+            <code class="inline-code">document.querySelector([".btn"])</code>. Метод
+            <code class="inline-code">querySelector</code> принимает строку CSS-селектора, а не массив. Кроме того,
+            селектор <code class="inline-code">.btn</code> нашел бы только первую кнопку.
+        </p>
+
+        <h3>Защитная проверка</h3>
+        <p>
+            Если какого-то важного элемента нет, скрипт должен остановиться и не падать дальше.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Guard clause</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>if ((!stepsContainer || !stepItems.length) || (!prevBtn || !nextBtn)) {
+    return;
+}</code></pre>
+        </div>
+
+        <p>
+            Эту проверку можно записать проще, смысл будет тот же:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Readable guard</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>if (!stepsContainer || !stepItems.length || !prevBtn || !nextBtn) {
+    return;
+}</code></pre>
+        </div>
+
+        <h3>currentStep и maxStep</h3>
+        <p>
+            <code class="inline-code">currentStep</code> хранит текущий индекс шага. Индекс начинается с нуля,
+            поэтому первый кружок на экране имеет индекс <code class="inline-code">0</code>, а пятый -
+            индекс <code class="inline-code">4</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">State values</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>let currentStep = 0;
+const currentClass = "step_current";
+const doneClass = "step_done";
+const maxStep = stepItems.length - 1;</code></pre>
+        </div>
+
+        <div class="two-column">
+            <div class="mini-card">
+                <h3>Для человека</h3>
+                <p>
+                    На экране шаги выглядят как <code class="inline-code">1, 2, 3, 4, 5</code>.
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3>Для JavaScript</h3>
+                <p>
+                    В коде индексы идут как <code class="inline-code">0, 1, 2, 3, 4</code>.
+                    Поэтому последний индекс равен <code class="inline-code">length - 1</code>.
+                </p>
+            </div>
+        </div>
+
+        <p>
+            Это объясняет вопрос, почему при <code class="inline-code">currentStep = 4</code> прогресс уже почти
+            полностью заполнен: индекс <code class="inline-code">4</code> - это пятый, последний шаг.
+        </p>
+
+        <h3>renderStep: одна функция рисует все состояния</h3>
+        <p>
+            Функция <code class="inline-code">renderStep</code> проходит по всем шагам и для каждого решает:
+            он уже пройденный, текущий или будущий.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Render logic</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function renderStep(targetStep) {
+    stepItems.forEach((step, index) =&gt; {
+        step.classList.remove(currentClass, doneClass);
+
+        if (targetStep === index) {
+            step.classList.add(currentClass);
+        } else if (targetStep &gt; index) {
+            step.classList.add(doneClass);
+        }
+    });
+
+    updateButtons();
+}</code></pre>
+        </div>
+
+        <p>
+            Здесь была важная ошибка с <code class="inline-code">classList.remove</code>. Запись
+            <code class="inline-code">currentClass || doneClass</code> не передает два класса. Оператор
+            <code class="inline-code">||</code> выбирает одно значение. То же самое с
+            <code class="inline-code">&amp;&amp;</code>: это не "и два аргумента", а логический оператор.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Remove two classes</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>// Неправильно: удалится только один выбранный оператором класс
+step.classList.remove(currentClass || doneClass);
+
+// Правильно: remove принимает несколько аргументов через запятую
+step.classList.remove(currentClass, doneClass);</code></pre>
+        </div>
+
+        <h3>updateButtons: disabled как результат проверки</h3>
+        <p>
+            Сначала было желание писать условия только на выключение кнопок. Но такая логика работает в одну сторону:
+            кнопка выключилась и потом сама не включится обратно.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Button state</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>function updateButtons() {
+    prevBtn.disabled = currentStep &lt;= 0;
+    nextBtn.disabled = currentStep &gt;= maxStep;
+}</code></pre>
+        </div>
+
+        <p>
+            Здесь справа от <code class="inline-code">=</code> стоит проверка, которая возвращает
+            <code class="inline-code">true</code> или <code class="inline-code">false</code>. Каждый раз состояние
+            кнопок пересчитывается заново.
+        </p>
+
+        <div class="callout warning">
+            Еще одна ошибка этапа: <code class="inline-code">desable</code> вместо
+            <code class="inline-code">disabled</code>. JavaScript не ругается, потому что можно создать новое
+            случайное свойство на объекте. Но браузерная кнопка реагирует именно на
+            <code class="inline-code">disabled</code>.
+        </div>
+
+        <h3>Клики Previous и Next</h3>
+        <p>
+            Обработчики кнопок не трогают классы напрямую. Они только меняют число
+            <code class="inline-code">currentStep</code>, а потом вызывают
+            <code class="inline-code">renderStep(currentStep)</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Click handlers</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>prevBtn.addEventListener("click", () =&gt; {
+    if (currentStep &gt; 0) {
+        currentStep--;
+        renderStep(currentStep);
+    }
+});
+
+nextBtn.addEventListener("click", () =&gt; {
+    if (currentStep &lt; maxStep) {
+        currentStep++;
+        renderStep(currentStep);
+    }
+});</code></pre>
+        </div>
+
+        <p>
+            Для <code class="inline-code">Previous</code> важна левая граница:
+            <code class="inline-code">currentStep &gt; 0</code>. Для <code class="inline-code">Next</code> важна
+            правая граница: <code class="inline-code">currentStep &lt; maxStep</code>. Условие
+            <code class="inline-code">currentStep &lt;= 0 || currentStep &lt; maxStep</code> работало, но было
+            логически шумным: Next не должен думать про левую границу.
+        </p>
+
+        <h3>Итог Step 2</h3>
+        <ol>
+            <li>Кнопки нашли через <code class="inline-code">data-action</code>, потому что это смысловой крючок команды.</li>
+            <li><code class="inline-code">currentStep</code> хранит индекс текущего шага.</li>
+            <li><code class="inline-code">maxStep</code> равен последнему индексу, поэтому это <code class="inline-code">length - 1</code>.</li>
+            <li><code class="inline-code">renderStep</code> сначала очищает классы, потом выставляет <code class="inline-code">done/current</code>.</li>
+            <li><code class="inline-code">classList.remove</code> принимает несколько классов через запятую.</li>
+            <li><code class="inline-code">disabled = условие</code> проще и надежнее, чем отдельные if только на выключение.</li>
+            <li>Клики меняют только число и запускают перерисовку; визуальная работа остается в CSS.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step3">
+        <h2>CSS Deep Dive: почему прогресс-бар работает без сложного JS</h2>
+        <p>
+            Этот раздел фиксирует самый сложный кусок проекта. Разметка и JS получились понятнее, а стили оказались
+            тяжелыми, потому что в одном компоненте встретились сразу несколько CSS-механик: mobile-first,
+            container query, flex, absolute-позиционирование, псевдоэлемент, transform по разным осям и задержка
+            перехода.
+        </p>
+
+        <div class="callout">
+            Главная мысль CSS-части: JS только ставит классы <code class="inline-code">step_done</code> и
+            <code class="inline-code">step_current</code>. Все ощущение "прогресс доехал до следующего шага"
+            создают CSS-селекторы, <code class="inline-code">::before</code>, <code class="inline-code">transform</code>
+            и <code class="inline-code">transition-delay</code>.
+        </div>
+
+        <h3>1. Один повторяющийся HTML-паттерн</h3>
+        <p>
+            Вся CSS-магия держится на порядке элементов в HTML. После каждого шага идет линия. Именно этот порядок
+            позволяет использовать соседний селектор <code class="inline-code">+</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Step + connector pattern</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>&lt;div class="step" data-step="0"&gt;
+    &lt;div class="step_number"&gt;1&lt;/div&gt;
+    &lt;div class="step_name"&gt;About You&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class="step_progress"&gt;&lt;/div&gt;</code></pre>
+        </div>
+
+        <p>
+            CSS потом читает это так: если шаг получил класс <code class="inline-code">step_done</code>, то линия
+            сразу после него должна заполниться.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Adjacent selector</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_done + .step_progress::before {
+    transform: scaleY(1);
+}</code></pre>
+        </div>
+
+        <p>
+            Плюс <code class="inline-code">+</code> выбирает не всех соседей, а только следующий элемент сразу после
+            текущего. Поэтому линия заполняется не где попало, а ровно после завершенного шага.
+        </p>
+
+        <h3>2. Mobile-first: почему "все наоборот"</h3>
+        <p>
+            Сначала мы сделали горизонтальную desktop-версию. Потом выяснилось, что оригинал построен наоборот:
+            базовые стили описывают мобильную вертикальную версию, а широкая версия включается отдельным блоком.
+        </p>
+
+        <div class="two-column">
+            <div class="mini-card">
+                <h3>Desktop-first</h3>
+                <p>
+                    Сначала пишем широкую версию, потом ломаем ее медиазапросами под мобилку.
+                    Для этого компонента так сложнее, потому что ось линии меняется с X на Y.
+                </p>
+            </div>
+
+            <div class="mini-card">
+                <h3>Mobile-first</h3>
+                <p>
+                    Сначала пишем простую вертикальную версию. Потом в <code class="inline-code">@container</code>
+                    переопределяем только отличия desktop-версии.
+                </p>
+            </div>
+        </div>
+
+        <p>
+            В мобильной версии шаг - это обычная строка: круг слева, текст справа. Поэтому
+            <code class="inline-code">.step_name</code> не должен быть absolute.
+        </p>
+
+        <div class="demo-strip">
+            <div class="demo-box">
+                <p class="demo-title">Mobile idea: обычный поток</p>
+                <div class="mini-step-column">
+                    <div class="mini-step"><span class="mini-dot active">1</span><span>About You</span></div>
+                    <div class="mini-line-y filled"></div>
+                    <div class="mini-step"><span class="mini-dot">2</span><span>About Book</span></div>
+                </div>
+            </div>
+
+            <div class="demo-box">
+                <p class="demo-title">Desktop idea: линия по X</p>
+                <div class="mini-step-row">
+                    <span class="mini-dot active">1</span>
+                    <span class="mini-line-x filled"></span>
+                    <span class="mini-dot">2</span>
+                    <span class="mini-line-x empty"></span>
+                    <span class="mini-dot">3</span>
+                </div>
+            </div>
+        </div>
+
+        <h3>3. Контейнер формы управляет раскладкой</h3>
+        <p>
+            В оригинале используется container query. Это похоже на media query, но условие смотрит не на ширину
+            всего окна браузера, а на ширину конкретного контейнера.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Enable container query</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.default form {
+    container: form / inline-size;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">container: form / inline-size</code> говорит браузеру:
+            эта форма теперь контейнер с именем <code class="inline-code">form</code>, и ее можно проверять
+            по inline-size, то есть по ширине в обычном горизонтальном письме.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Desktop switch</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>@container form (min-width: 30em) {
+    .steps {
+        flex-direction: row;
+        align-items: center;
+        padding: 70px;
+    }
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">min-width: 30em</code> значит: когда форма стала достаточно широкой,
+            включи desktop-раскладку. <code class="inline-code">em</code> здесь зависит от размера шрифта:
+            если базовый шрифт 16px, то <code class="inline-code">30em</code> примерно 480px.
+        </p>
+
+        <h3>4. .steps: внешний режим списка</h3>
+        <p>
+            Базовый <code class="inline-code">.steps</code> теперь отвечает за мобильную вертикальную версию.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Mobile .steps</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.steps {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.5rem;
+    background-color: var(--step-panel);
+    border-radius: 12px;
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">display: flex</code> делает детей управляемыми flex-элементами.</li>
+            <li><code class="inline-code">flex-direction: column</code> ставит шаги и линии сверху вниз.</li>
+            <li><code class="inline-code">padding: 1.5rem</code> дает внутренний воздух без огромной фиксированной высоты на мобилке.</li>
+        </ul>
+
+        <p>
+            В desktop-режиме меняется только направление и выравнивание:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Desktop .steps override</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>@container form (min-width: 30em) {
+    .steps {
+        flex-direction: row;
+        align-items: center;
+        padding: 70px;
+    }
+}</code></pre>
+        </div>
+
+        <p>
+            Это не два разных компонента. Это один и тот же HTML, но ось раскладки меняется:
+            mobile - ось Y, desktop - ось X.
+        </p>
+
+        <h3>5. .step: строка на мобилке, точка на desktop</h3>
+        <p>
+            На мобилке <code class="inline-code">.step</code> должен быть обычной строкой. Круг и текст стоят рядом,
+            поэтому absolute-позиционирование не нужно.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Step row</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">flex-shrink: 0</code> запрещает шагу сжиматься, когда рядом появляются линии.
+            <code class="inline-code">z-index: 1</code> держит шаг выше линии, если они визуально пересекаются.
+        </p>
+
+        <h3>6. .step_number: круг и анимация состояния</h3>
+        <p>
+            Круг - это обычный flex-блок с одинаковыми <code class="inline-code">width</code> и
+            <code class="inline-code">height</code>. На мобилке у него есть правый отступ до текста.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Number circle</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    margin-inline-end: 0.5em;
+    transition:
+        background-color var(--step-duration) var(--step-easing),
+        box-shadow var(--step-duration) var(--step-easing),
+        color var(--step-duration) var(--step-easing);
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">margin-inline-end</code> - это логический аналог отступа справа.
+            В обычном направлении текста он работает как <code class="inline-code">margin-right</code>, но лучше
+            подходит для интерфейсов, где направление письма теоретически может быть другим.
+        </p>
+
+        <p>
+            <code class="inline-code">transition</code> стоит на базовом классе, а не только на
+            <code class="inline-code">.step_current</code>. Поэтому изменение плавное и при добавлении класса,
+            и при удалении.
+        </p>
+
+        <h3>7. .step_name: почему absolute только на desktop</h3>
+        <p>
+            На мобилке подпись - обычный текст рядом с кругом. Поэтому она стоит в потоке и участвует в ширине строки.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Mobile step name</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_name {
+    padding: 10px;
+    max-width: unset;
+    width: max-content;
+    color: hsl(var(--step-hue), 10%, 50%);
+    font-size: 20px;
+    line-height: 1.2;
+    transition:
+        color var(--step-duration) var(--step-easing),
+        font-weight var(--step-duration) var(--step-easing);
+}</code></pre>
+        </div>
+
+        <p>
+            В desktop-режиме подпись нужно повесить под кругом, поэтому там возвращается absolute:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Desktop step name</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>@container form (min-width: 30em) {
+    .step_name {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px;
+    }
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">top: 100%</code> ставит верх подписи сразу под высотой родителя
+            <code class="inline-code">.step</code>. <code class="inline-code">left: 50%</code> ставит левый край
+            в центр родителя. <code class="inline-code">translateX(-50%)</code> сдвигает подпись назад на половину
+            ее собственной ширины, поэтому она центрируется под кругом.
+        </p>
+
+        <h3>8. .step_progress: линия как отдельный элемент</h3>
+        <p>
+            Линия между шагами - это не border у шага. Это отдельный элемент
+            <code class="inline-code">.step_progress</code>. Он нужен, чтобы линия могла быть серым фоном, а поверх
+            нее могло ехать синее заполнение.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Mobile vertical connector</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_progress {
+    position: relative;
+    overflow: hidden;
+    width: 0.125em;
+    height: 1.25em;
+    margin-inline-start: 25px;
+    background-color: hsl(var(--step-hue), 10%, 40%);
+    transform: translateX(-50%);
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">width: 0.125em</code> - тонкая вертикальная линия.</li>
+            <li><code class="inline-code">height: 1.25em</code> - длина линии между двумя шагами.</li>
+            <li><code class="inline-code">margin-inline-start: 25px</code> - сдвиг к центру круга 50px.</li>
+            <li><code class="inline-code">translateX(-50%)</code> центрирует саму тонкую линию относительно этой точки.</li>
+            <li><code class="inline-code">overflow: hidden</code> прячет ту часть <code class="inline-code">::before</code>, которая сжата transform-ом.</li>
+        </ul>
+
+        <p>
+            На desktop линия становится горизонтальной и занимает свободное место между кругами:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Desktop horizontal connector</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>@container form (min-width: 30em) {
+    .step_progress {
+        flex: 1;
+        width: auto;
+        height: 0.125em;
+        margin-inline-start: 0;
+        transform: none;
+    }
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">flex: 1</code> здесь означает: линия забирает свободное место между шагами.
+            Это причина, почему на широком экране линии растягиваются ровно между кружками.
+        </p>
+
+        <h3>9. ::before: синее заполнение поверх серой линии</h3>
+        <p>
+            Серый фон находится на самой <code class="inline-code">.step_progress</code>. Синяя заполняющая часть
+            находится на псевдоэлементе <code class="inline-code">.step_progress::before</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Mobile fill by Y axis</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_progress::before {
+    transform: scaleY(0);
+    transform-origin: 50% 0;
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: var(--step-primary);
+    transition: transform var(--step-duration) var(--step-easing);
+}</code></pre>
+        </div>
+
+        <p>
+            В мобильной версии линия вертикальная, поэтому используется <code class="inline-code">scaleY</code>.
+            <code class="inline-code">scaleY(0)</code> - высота заполнения сжата до нуля.
+            <code class="inline-code">scaleY(1)</code> - заполнение на всю высоту.
+        </p>
+
+        <p>
+            <code class="inline-code">transform-origin: 50% 0</code> задает точку роста: по X центр, по Y верх.
+            Значит синяя линия растет сверху вниз.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Desktop fill by X axis</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>@container form (min-width: 30em) {
+    .step_progress::before {
+        transform: scaleX(0);
+        transform-origin: 0 50%;
+    }
+}</code></pre>
+        </div>
+
+        <p>
+            В desktop-версии линия горизонтальная, поэтому используется <code class="inline-code">scaleX</code>.
+            <code class="inline-code">transform-origin: 0 50%</code> значит: расти от левого края к правому.
+        </p>
+
+        <h3>10. step_done запускает заполнение следующей линии</h3>
+        <p>
+            Когда JS ставит шагу класс <code class="inline-code">step_done</code>, CSS находит следующую после него
+            линию и раскрывает ее <code class="inline-code">::before</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Mobile done connector</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_done + .step_progress::before {
+    transform: scaleY(1);
+}</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Desktop done connector</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>@container form (min-width: 30em) {
+    .step_done + .step_progress::before {
+        transform: scaleX(1);
+    }
+}</code></pre>
+        </div>
+
+        <p>
+            Здесь находится основной "секрет" компонента. JS не анимирует ширину линии. JS только говорит:
+            этот шаг уже <code class="inline-code">done</code>. CSS сам знает, что линия после done-шага должна
+            заполниться.
+        </p>
+
+        <h3>11. Почему current подсвечивается после линии</h3>
+        <p>
+            Проблема была такая: при клике новый кружок сразу становился активным, а линия еще только ехала до него.
+            Визуально получалось нелогично: будто пользователь уже перешел на следующий шаг быстрее, чем прогресс
+            дошел до него.
+        </p>
+
+        <p>
+            Решение: линия стартует сразу, а подсветка current получает задержку на длительность этой линии.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Delayed current number</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>.step_current .step_number {
+    transition-delay: var(--step-duration);
+    background-color: var(--step-primary);
+    box-shadow: 0 0 0 4px hsl(223deg 90% 70% / 75%);
+    color: hsl(var(--step-hue), 10%, 90%);
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">--step-duration</code> равен <code class="inline-code">0.3s</code>.
+            Линия тоже анимируется <code class="inline-code">0.3s</code>. Поэтому кружок ждет столько же, сколько
+            линия заполняется.
+        </p>
+
+        <div class="callout">
+            Важно: задержка работает заметно только потому, что у базового
+            <code class="inline-code">.step_number</code> есть <code class="inline-code">transition</code>.
+            Если transition нет, браузер просто мгновенно применит новые стили.
+        </div>
+
+        <h3>12. cubic-bezier простыми словами</h3>
+        <p>
+            <code class="inline-code">cubic-bezier(0.65, 0, 0.35, 1)</code> управляет не направлением анимации,
+            а ее скоростью во времени. Это не "куда едет линия", а "как она разгоняется и тормозит".
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Transition variables</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>--step-duration: 0.3s;
+--step-easing: cubic-bezier(0.65, 0, 0.35, 1);</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">duration</code> - сколько длится переход.</li>
+            <li><code class="inline-code">easing</code> - как меняется скорость внутри этого времени.</li>
+            <li><code class="inline-code">linear</code> ехал бы одинаково ровно.</li>
+            <li><code class="inline-code">cubic-bezier</code> дает более живое движение с разгоном и торможением.</li>
+        </ul>
+
+        <h3>13. Полная связка HTML, CSS и JS</h3>
+        <p>
+            На одном переходе <code class="inline-code">Next</code> вся цепочка выглядит так.
+        </p>
+
+        <ol>
+            <li>Пользователь нажимает <code class="inline-code">Next</code>.</li>
+            <li>JS проверяет <code class="inline-code">currentStep &lt; maxStep</code>.</li>
+            <li>JS увеличивает <code class="inline-code">currentStep</code>.</li>
+            <li><code class="inline-code">renderStep</code> очищает классы у всех шагов.</li>
+            <li>Шаги с индексом меньше текущего получают <code class="inline-code">step_done</code>.</li>
+            <li>Текущий шаг получает <code class="inline-code">step_current</code>.</li>
+            <li>CSS-селектор <code class="inline-code">.step_done + .step_progress::before</code> запускает заполнение линии.</li>
+            <li><code class="inline-code">.step_current .step_number</code> подсвечивается с задержкой.</li>
+            <li><code class="inline-code">updateButtons</code> пересчитывает disabled у кнопок.</li>
+        </ol>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">The whole idea in short</span>
+                <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>// JS
+if (targetStep &gt; index) {
+    step.classList.add("step_done");
+}
+
+// CSS
+.step_done + .step_progress::before {
+    transform: scaleY(1);
+}</code></pre>
+        </div>
+
+        <p>
+            Это и есть причина, почему прогресс-бар начал работать "правильно" без усложнения JS.
+            Правильная динамика была заложена в CSS-структуре: класс на шаге управляет линией, которая стоит после него.
+        </p>
+
+        <h3>14. Что писать, если собирать компонент заново</h3>
+        <ol>
+            <li>Сначала HTML: <code class="inline-code">step -> progress -> step -> progress</code>.</li>
+            <li>Потом CSS mobile-first: вертикальная колонка, шаг строкой, линия по Y.</li>
+            <li>Потом state-классы: <code class="inline-code">step_done</code>, <code class="inline-code">step_current</code>.</li>
+            <li>Потом <code class="inline-code">::before</code> на линии и заполнение через <code class="inline-code">scaleY</code>.</li>
+            <li>Потом <code class="inline-code">@container</code> и desktop-переопределения: row, линия по X, подпись absolute.</li>
+            <li>Потом delay для current, чтобы визуальный порядок стал логичным.</li>
+            <li>И только после этого JS, который переключает классы.</li>
+        </ol>
+
+        <h3>Итог CSS Deep Dive</h3>
+        <ol>
+            <li>Mobile-first здесь нужен не для моды, а потому что вертикальная версия проще как базовая.</li>
+            <li><code class="inline-code">@container</code> переключает компонент по ширине формы, а не всего окна.</li>
+            <li>Один и тот же HTML работает в двух раскладках: mobile по Y, desktop по X.</li>
+            <li><code class="inline-code">.step_progress</code> - серый фон линии, <code class="inline-code">::before</code> - синее заполнение.</li>
+            <li><code class="inline-code">scaleY</code> нужен для вертикальной линии, <code class="inline-code">scaleX</code> для горизонтальной.</li>
+            <li><code class="inline-code">transform-origin</code> задает точку, откуда растет заполнение.</li>
+            <li><code class="inline-code">.step_done + .step_progress::before</code> связывает завершенный шаг со следующей линией.</li>
+            <li><code class="inline-code">transition-delay</code> делает порядок понятным: сначала линия, потом активный кружок.</li>
+            <li>JS остался простым именно потому, что CSS взял на себя визуальную механику.</li>
         </ol>
     </section>
 </main>
