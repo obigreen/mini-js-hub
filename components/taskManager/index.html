@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Task manager</title>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <link rel="stylesheet" href="./style.css"/>
+</head>
+
+<body>
+<main class="page">
+    <div class="global-container">
+        <div class="topbar">
+            <a class="back" href="../../index.html" aria-label="Вернуться на главную">
+                <span aria-hidden="true">🏃🚶🧎</span>
+                <span>Back</span>
+            </a>
+        </div>
+
+        <h1 class="h1">Main title - H1</h1>
+        <p class="p-muted">drag and drop (библиотека - Dragula), БЭМ методология</p>
+
+        <section class="card default">
+
+
+            <section class="task-manager" aria-label="Task-manager">
+
+
+                <form class="add-column-form">
+                    <input id="addColumn" class="add-column-form__input" type="text" placeholder="New column..." maxlength="24">
+                    <button class="add-column-form__button" type="submit" aria-label="Add column">Add column</button>
+                </form>
+
+                <div class="task-board">
+                    <ul class="task-board__columns" id="columns">
+
+                        <!--a static column-->
+                        <li class="task-column">
+
+                            <header class="task-column__header">
+                                <h2 class="task-column__title">
+                                    To Do
+                                </h2>
+                            </header>
+
+                            <form class="add-task-form">
+                                <input type="text" value="" placeholder="New task..." maxlength="40"
+                                       class="add-task-form__input"/>
+                                <button type="submit" class="add-task-form__button">Add</button>
+                            </form>
+
+                            <ul class="task-list" id="todoTasks">
+                                <li class="task">
+                                    <span class="task__text">Read documentation</span>
+                                    <button class="task__delete-button" type="button" aria-label="Delete task">×</button>
+                                </li>
+                            </ul>
+                        </li>
+
+
+                    </ul>
+                </div>
+            </section>
+
+
+            <!--            <p class="default_line">-->
+            <!--                For ex. - Used files: <span class="mono">common.css</span> + <span class="mono">style.css</span> + <span class="mono">script.js</span>-->
+            <!--            </p>-->
+
+        </section>
+    </div>
+    <footer class="footer">
+        <div class="global-container footer_inner">
+            <div class="credit">
+            <span class="source_logo" aria-hidden="true">
+                <!-- Cube mark (SVG) -->
+                <svg class="source_logoSvg" width="60" height="60" viewBox="0 0 24 24" fill="none"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2.4 3.2 7.5V16.5L12 21.6l8.8-5.1V7.5L12 2.4Z"
+                          stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                    <path d="M3.2 7.5 12 12.6l8.8-5.1" stroke="currentColor" stroke-width="1.2"
+                          stroke-linejoin="round"/>
+                    <path d="M12 12.6V21.6" stroke="currentColor" stroke-width="1.2"
+                          stroke-linecap="round"/>
+                    <path d="M12 2.4v10.2" stroke="currentColor" stroke-width="1.1"
+                          stroke-linecap="round" opacity="0.65"/>
+                </svg>
+            </span>
+
+                <div class="source_text">
+                    <div class="source_title"><span class="source_info_title">Project name:</span> Daily ToDo
+                    </div>
+                    <div class="source_meta">
+                        <span class="source_author"><span class="source_info_title">Author:</span> <a target="_blank"
+                                                                                                      href="https://codepen.io/shivani0805">Shivani</a></span>
+                    </div>
+                    <div>
+                        <a class="source_link"
+                           href="https://codepen.io/shivani0805/pen/NWQPBQN"
+                           target="_blank"
+                           rel="noreferrer noopener"
+                           aria-label="Открыть источник кода">
+                        <span class="source_linkIcon" aria-hidden="true">
+                            <!-- Link icon (SVG) -->
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10.6 13.4a4.3 4.3 0 0 1 0-6.1l1.6-1.6a4.3 4.3 0 0 1 6.1 6.1l-1.1 1.1"
+                                      stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                                <path d="M13.4 10.6a4.3 4.3 0 0 1 0 6.1l-1.6 1.6a4.3 4.3 0 0 1-6.1-6.1l1.1-1.1"
+                                      stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                      stroke-linejoin="round"/>
+                            </svg>
+                        </span>
+                            <span class="source_linkText">Source</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+</main>
+
+<script src="./script.js"></script>
+</body>
+</html>
