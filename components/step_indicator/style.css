@@ -9,7 +9,7 @@
 }
 
 .default_line {
-    margin: 0;
+    margin: 0 auto 20px;
     color: rgba(255, 255, 255, 0.82);
 }
 

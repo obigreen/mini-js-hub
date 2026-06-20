@@ -12,63 +12,124 @@
     color: rgba(255, 255, 255, 0.70);
 }
 
-/*
-    TASK 02. Базовая стилизация task manager и горизонтальная доска.
+.task-board__columns,
+.task-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
 
-    Сейчас JS еще не нужен. Нужно сделать так, чтобы каркас уже вел себя как будущая kanban-доска:
-    - верхняя форма добавления колонки остается над доской;
-    - область с колонками имеет горизонтальный скролл;
-    - сама страница не должна расширяться из-за новых колонок;
-    - колонка имеет фиксированную/стабильную ширину;
-    - список задач внутри колонки готов к будущему drag and drop.
+.add-column-form {
+    width: 50%;
+    justify-content: start;
+    display: flex;
+    gap: 10px;
+    position: relative;
+    border-radius: 10px;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
 
-    Важная идея:
-    overflow-x: auto;  // показывает горизонтальный скролл, если колонок больше ширины контейнера
-    overflow-y: hidden; // не дает лишней вертикальной прокрутки самой board-обертке
+.add-column-form__input, .add-task-form__input {
+    border: none;
+    border-radius: 0.2rem;
+    text-align: center;
+    padding: 0.6rem;
+    width: 100%;
+    background: #1b2e4b;
+    color: #bfc9d4;
+}
 
-    Не используй overflow-x: hidden для доски, если хочешь скроллить колонки.
-    hidden просто обрежет лишние колонки.
+.add-column-form__button, .add-task-form__button {
+    border: none;
+    font-weight: 700;
+    border-radius: 0.2rem;
+    color: #000013;
+    padding: 0.6rem;
+    cursor: pointer;
+    background-color: #ffcb1e;
+    white-space: nowrap;
+    width: max-content;
+}
 
-    Что нужно стилизовать:
 
-    1. .task-manager
-       Общая обертка компонента. Можно сделать display: grid и gap между формой и доской.
+.task-board {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
 
-    2. .add-column-form
-       Верхняя форма. Сделай display: flex, gap, max-width или width: min(...), чтобы input и button
-       выглядели как единый контрол добавления колонки.
+.task-board__columns {
+    display: flex;
+    justify-content: start;
+    align-items: flex-start;
+    gap: 16px;
+    width: max-content;
+}
 
-    3. .task-board
-       Это viewport/окно для колонок.
-       Здесь нужен горизонтальный скролл:
-       overflow-x: auto;
-       overflow-y: hidden;
 
-    4. .task-board__columns
-       Это flex-ряд колонок.
-       Важно:
-       display: flex;
-       gap: ...;
-       width: max-content; // ряд может быть шире viewport, тогда появится горизонтальный скролл
-
-    5. .task-column
-       Одна колонка. Ей нужна стабильная ширина:
-       flex: 0 0 280px;
-       Это значит: колонка не сжимается и не растягивается, а держит ширину 280px.
-
-    6. .task-list
-       Список задач. Дай min-height, чтобы будущая пустая колонка все равно имела зону,
-       куда можно будет перетаскивать карточки.
-
-    7. .task
-       Карточка задачи. Уже сейчас можно сделать cursor: grab, потому что дальше она будет draggable.
-
-    Мини-подсказка по flex:
+.task-column {
     flex: 0 0 280px;
-    первое 0 - flex-grow: не расти;
-    второе 0 - flex-shrink: не сжиматься;
-    280px - базовая ширина.
+    display: flex;
+    flex-direction: column;
+    background: #0e1726;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 18px 20px 10px -23px rgb(0 0 0 / 15%);
+}
 
-    После этого шага визуально должна появиться нормальная колонка внутри card.default.
-    Горизонтальный скролл станет заметен позже, когда колонок будет больше одной.
-*/
+
+.task-column__header {
+    padding: 16px;
+    width: 100%;
+    border-bottom: 1px solid #1b2e4b;
+    text-align: center;
+}
+
+.task-column__title {
+    margin: 0;
+}
+
+.add-task-form {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+}
+
+.add-task-form__input {
+    min-width: 0;
+    flex: 1;
+}
+
+.add-task-form__button {
+    white-space: nowrap;
+}
+
+.task-list {
+    min-height: 120px;
+    padding: 12px;
+}
+
+.task {
+    position: relative;
+    background: #1b2e4b;
+    cursor: move;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 15px;
+    padding: 1rem;
+}
+
+
+.task__delete-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    cursor: pointer;
+    background-color: #ffcb1e;
+    white-space: nowrap;
+    border: none;
+    font-weight: 700;
+    border-radius: 0 10px 0 0;
+    color: #000013;
+}
