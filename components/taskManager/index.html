@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Task manager</title>
     <link rel="stylesheet" href="../../css/common.css"/>
+    <!-- TASK 07 (Dragula). Подключить CSS библиотеки dragula перед style.css.
+         Для GitHub Pages удобнее CDN, потому что node_modules не попадает на Pages.
+         CSS нужен для служебных классов dragula: .gu-mirror, .gu-hide, .gu-transit.
+         Подключение:
+         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css">
+    -->
     <link rel="stylesheet" href="./style.css"/>
 </head>
 
@@ -19,7 +25,7 @@
             </a>
         </div>
 
-        <h1 class="h1">Main title - H1</h1>
+        <h1 class="h1">Task manager</h1>
         <p class="p-muted">drag and drop (библиотека - Dragula), БЭМ методология</p>
 
         <section class="card default">
@@ -122,6 +128,12 @@
     </footer>
 </main>
 
+<!-- TASK 07 (Dragula). Подключить JS библиотеки dragula перед script.js.
+     Порядок важен: сначала библиотека создает глобальную функцию dragula,
+     потом наш script.js сможет ее вызвать.
+     Подключение:
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
+-->
 <script src="./script.js"></script>
 </body>
 </html>

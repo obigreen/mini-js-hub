@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager Notes</title>
+    <style>
+        :root {
+            --bg: #151515;
+            --panel: #202020;
+            --panel-soft: #262626;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --border: rgba(255, 255, 255, 0.12);
+            --accent: #ffcb1e;
+            --accent-soft: rgba(255, 203, 30, 0.12);
+            --code-bg: #101312;
+            --radius: 14px;
+            --container: 980px;
+            --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100dvh;
+            background:
+                    radial-gradient(900px 600px at 12% 0%, rgba(255, 203, 30, 0.12), transparent 55%),
+                    radial-gradient(700px 500px at 92% 18%, rgba(27, 46, 75, 0.35), transparent 55%),
+                    var(--bg);
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+        }
+
+        code,
+        pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        .page {
+            width: min(100% - 32px, var(--container));
+            margin: 0 auto;
+            padding: 32px 0 56px;
+        }
+
+        .note-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            margin: 0 -16px 28px;
+            padding: 16px;
+            background: rgba(21, 21, 21, 0.86);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(14px);
+        }
+
+        .note-header-inner {
+            width: min(100%, var(--container));
+            margin: 0 auto;
+        }
+
+        .note-kicker {
+            margin: 0 0 4px;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .note-title {
+            margin: 0 0 14px;
+            font-size: clamp(28px, 5vw, 46px);
+            line-height: 1.08;
+        }
+
+        .note-nav {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .note-nav a,
+        .note-nav span {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .note-nav a:hover,
+        .note-nav a.is-active {
+            border-color: rgba(255, 203, 30, 0.55);
+            background: var(--accent-soft);
+        }
+
+        .note-nav span {
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        .note-section {
+            margin-top: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: rgba(32, 32, 32, 0.82);
+            box-shadow: var(--shadow);
+        }
+
+        .note-section h2 {
+            margin: 0 0 12px;
+            font-size: 26px;
+            line-height: 1.2;
+        }
+
+        .note-section h3 {
+            margin: 24px 0 8px;
+            font-size: 19px;
+            line-height: 1.25;
+        }
+
+        .note-section p {
+            margin: 10px 0;
+            color: var(--muted);
+        }
+
+        .note-section ul,
+        .note-section ol {
+            margin: 10px 0;
+            padding-left: 22px;
+            color: var(--muted);
+        }
+
+        .note-section li + li {
+            margin-top: 6px;
+        }
+
+        .note-section strong {
+            color: var(--text);
+        }
+
+        .inline-code {
+            padding: 2px 6px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            font-size: 0.94em;
+        }
+
+        .callout {
+            margin: 16px 0;
+            padding: 14px 16px;
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            background: var(--accent-soft);
+            color: var(--text);
+        }
+
+        .code-card {
+            margin: 16px 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 12px;
+            background: var(--code-bg);
+        }
+
+        .code-card-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .code-card-title {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        pre {
+            margin: 0;
+            padding: 16px;
+            overflow-x: auto;
+            color: #fff0ba;
+            font-size: 14px;
+            line-height: 1.55;
+            white-space: pre;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .mini-card {
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .mini-card h3 {
+            margin-top: 0;
+        }
+
+        @media (max-width: 720px) {
+            .page {
+                width: min(100% - 20px, var(--container));
+                padding-top: 16px;
+            }
+
+            .note-header {
+                margin: 0 -10px 18px;
+                padding: 12px 10px;
+            }
+
+            .note-section {
+                padding: 18px;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <header class="note-header">
+        <div class="note-header-inner">
+            <p class="note-kicker">Task Manager</p>
+            <h1 class="note-title">Конспект разработки</h1>
+            <nav class="note-nav" aria-label="Навигация по шагам">
+                <a href="#step1" class="is-active">Step 1</a>
+                <span>Step 2</span>
+                <span>Drag and Drop</span>
+            </nav>
+        </div>
+    </header>
+
+    <section class="note-section" id="step1">
+        <h2>Step 1: Каркас, доска и создание колонки</h2>
+        <p>
+            На первом шаге собрали основу task manager: верхняя форма добавляет колонки,
+            внутри доски есть горизонтальная область для колонок, а каждая колонка содержит
+            форму для будущего добавления задач и отдельный список задач.
+        </p>
+
+        <div class="callout">
+            Главная идея этапа: доска - это не просто список карточек. У нее есть уровни ответственности:
+            viewport для скролла, ряд колонок, отдельная колонка, форма задачи и список задач.
+        </div>
+
+        <h3>Структура интерфейса</h3>
+        <p>
+            Разметка строится вокруг нескольких смысловых уровней. Верхняя форма находится отдельно от
+            scroll-области, чтобы не уезжать вместе с колонками.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">DOM structure</span>
+            </div>
+            <pre><code>&lt;section class="task-manager"&gt;
+    &lt;form class="add-column-form"&gt;...&lt;/form&gt;
+
+    &lt;div class="task-board"&gt;
+        &lt;ul class="task-board__columns" id="columns"&gt;
+            &lt;li class="task-column"&gt;
+                &lt;header class="task-column__header"&gt;...&lt;/header&gt;
+                &lt;form class="add-task-form"&gt;...&lt;/form&gt;
+                &lt;ul class="task-list"&gt;...&lt;/ul&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+&lt;/section&gt;</code></pre>
+        </div>
+
+        <h3>БЭМ-нейминг</h3>
+        <p>
+            В проекте начали использовать БЭМ. Двойное подчеркивание показывает, что элемент является частью блока.
+            Например, <code class="inline-code">task-column__title</code> - это title внутри блока
+            <code class="inline-code">task-column</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">BEM pattern</span>
+            </div>
+            <pre><code>.task-column
+.task-column__header
+.task-column__title
+
+.add-task-form
+.add-task-form__input
+.add-task-form__button
+
+.task
+.task__text
+.task__delete-button</code></pre>
+        </div>
+
+        <p>
+            Важное правило: если есть класс вида <code class="inline-code">block__element</code>,
+            должен быть понятен блок <code class="inline-code">block</code>. Поэтому
+            <code class="inline-code">add-task-form__input</code> логичнее, чем
+            <code class="inline-code">add-task__input</code>, если блока
+            <code class="inline-code">add-task</code> в разметке нет.
+        </p>
+
+        <h3>Горизонтальная доска</h3>
+        <p>
+            Для колонок нужна отдельная область прокрутки. Важно не расширять всю страницу, а скроллить только
+            внутреннюю доску.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Board viewport</span>
+            </div>
+            <pre><code>.task-board {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">overflow-x: auto</code> включает горизонтальный скролл, когда колонок больше ширины контейнера.</li>
+            <li><code class="inline-code">overflow-y: hidden</code> не дает board-обертке создавать лишний вертикальный скролл.</li>
+            <li><code class="inline-code">overflow-x: hidden</code> здесь не подходит: он просто обрежет лишние колонки.</li>
+        </ul>
+
+        <h3>Ряд колонок</h3>
+        <p>
+            Сами колонки лежат внутри <code class="inline-code">ul.task-board__columns</code>. Для такого ряда
+            удобнее <code class="inline-code">flex</code>, потому что новые колонки просто добавляются в конец линии.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Columns row</span>
+            </div>
+            <pre><code>.task-board__columns {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    width: max-content;
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">width: max-content</code> говорит ряду колонок: будь такой ширины,
+            сколько нужно твоему содержимому. Если колонок много, ряд становится шире viewport,
+            а <code class="inline-code">.task-board</code> дает горизонтальный скролл.
+        </p>
+
+        <h3>Ширина колонки</h3>
+        <p>
+            Колонка должна быть стабильной ширины. Для этого используется flex-сокращение:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Stable column width</span>
+            </div>
+            <pre><code>.task-column {
+    flex: 0 0 280px;
+}</code></pre>
+        </div>
+
+        <ul>
+            <li>Первый <code class="inline-code">0</code> - <code class="inline-code">flex-grow</code>: колонка не растет.</li>
+            <li>Второй <code class="inline-code">0</code> - <code class="inline-code">flex-shrink</code>: колонка не сжимается.</li>
+            <li><code class="inline-code">280px</code> - базовая ширина колонки.</li>
+        </ul>
+
+        <p>
+            Поэтому <code class="inline-code">width: 100%</code> на самой колонке здесь не нужен:
+            он конфликтует по смыслу с задачей держать фиксированную ширину внутри flex-ряда.
+        </p>
+
+        <h3>Стандартный padding у ul</h3>
+        <p>
+            У <code class="inline-code">ul</code> в браузере по умолчанию есть левый отступ около 40px.
+            Обнулить только <code class="inline-code">list-style</code> недостаточно: маркеры исчезнут,
+            но padding останется.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">List reset</span>
+            </div>
+            <pre><code>.task-board__columns,
+.task-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}</code></pre>
+        </div>
+
+        <p>
+            Потом для <code class="inline-code">.task-list</code> можно отдельно вернуть нужный внутренний
+            padding уже осознанно, например для отступов карточек внутри колонки.
+        </p>
+
+        <h3>Гибкий input и кнопка без переноса</h3>
+        <p>
+            У кнопки добавления колонки текст переносился на две строки. Это не проблема ширины формы,
+            а поведение текста внутри кнопки.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">No wrapping button text</span>
+            </div>
+            <pre><code>.add-column-form__button {
+    white-space: nowrap;
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">white-space: nowrap</code> запрещает перенос текста внутри кнопки.
+            Input при этом может оставаться гибким и занимать свободное место.
+        </p>
+
+        <h3>DOMContentLoaded</h3>
+        <p>
+            JS запускается после события <code class="inline-code">DOMContentLoaded</code>, чтобы элементы
+            из HTML уже существовали и их можно было найти через <code class="inline-code">querySelector</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">DOM ready</span>
+            </div>
+            <pre><code>document.addEventListener("DOMContentLoaded", () =&gt; {
+    // Здесь уже можно искать элементы.
+});</code></pre>
+        </div>
+
+        <h3>Проверка элементов</h3>
+        <p>
+            После поиска элементов идет проверка. Если какой-то важный элемент не найден,
+            код останавливается через <code class="inline-code">return</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Guard check</span>
+            </div>
+            <pre><code>if (!addColumnForm || !addColumnInput || !columnsItem) {
+    console.log("Task manager elements not found");
+    return;
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">return</code> работает здесь, потому что код находится внутри функции
+            обработчика <code class="inline-code">DOMContentLoaded</code>. На верхнем уровне файла
+            <code class="inline-code">return</code> вызвал бы ошибку.
+        </p>
+
+        <h3>submit и preventDefault</h3>
+        <p>
+            Форма добавления колонки обрабатывается через событие <code class="inline-code">submit</code>.
+            Это покрывает сразу два сценария: клик по кнопке submit и Enter внутри input.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Form submit</span>
+            </div>
+            <pre><code>addColumnForm.addEventListener("submit", (e) =&gt; {
+    e.preventDefault();
+
+    const columnTitle = addColumnInput.value.trim();
+});</code></pre>
+        </div>
+
+        <p>
+            У формы есть стандартное поведение браузера: отправить форму и перезагрузить страницу.
+            <code class="inline-code">e.preventDefault()</code> отменяет это стандартное действие.
+            После этого форма остается на странице, а логикой управляет JS.
+        </p>
+
+        <h3>createElement и classList.add</h3>
+        <p>
+            Новая колонка создается через DOM API, а не через <code class="inline-code">innerHTML</code>.
+            Это хорошая практика, потому что название колонки вводит пользователь.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Create DOM element</span>
+            </div>
+            <pre><code>const newColumn = document.createElement("li");
+newColumn.classList.add("task-column");</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">document.createElement("li")</code> создает новый DOM-элемент в памяти.
+            Он еще не находится на странице. <code class="inline-code">classList.add(...)</code> добавляет
+            CSS-класс этому элементу.
+        </p>
+
+        <h3>Свойства DOM-элементов</h3>
+        <p>
+            У созданного input можно настраивать свойства напрямую. Это не CSS-свойства,
+            а свойства DOM-объекта, которые соответствуют HTML-атрибутам.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Input properties</span>
+            </div>
+            <pre><code>newColumnInput.type = "text";
+newColumnInput.placeholder = "New task...";
+newColumnInput.maxLength = 40;</code></pre>
+        </div>
+
+        <ul>
+            <li><code class="inline-code">type</code> соответствует HTML-атрибуту <code class="inline-code">type</code>.</li>
+            <li><code class="inline-code">placeholder</code> соответствует HTML-атрибуту <code class="inline-code">placeholder</code>.</li>
+            <li><code class="inline-code">maxLength</code> соответствует HTML-атрибуту <code class="inline-code">maxlength</code>, но в JS пишется camelCase.</li>
+        </ul>
+
+        <p>
+            То есть эта JS-запись:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">JS properties</span>
+            </div>
+            <pre><code>newColumnInput.type = "text";
+newColumnInput.placeholder = "New task...";
+newColumnInput.maxLength = 40;</code></pre>
+        </div>
+
+        <p>
+            примерно соответствует такой HTML-разметке:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">HTML attributes</span>
+            </div>
+            <pre><code>&lt;input type="text" placeholder="New task..." maxlength="40"&gt;</code></pre>
+        </div>
+
+        <h3>textContent</h3>
+        <p>
+            Пользовательский текст записывается через <code class="inline-code">textContent</code>.
+            Это важно: <code class="inline-code">textContent</code> вставляет именно текст, а не HTML.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Safe text insertion</span>
+            </div>
+            <pre><code>newColumnTitle.textContent = columnTitle;</code></pre>
+        </div>
+
+        <p>
+            Если использовать <code class="inline-code">innerHTML</code> с пользовательским вводом,
+            браузер будет воспринимать строку как HTML-разметку. Для портфолио и хорошей практики
+            пользовательский текст лучше вставлять через <code class="inline-code">textContent</code>.
+        </p>
+
+        <h3>append</h3>
+        <p>
+            <code class="inline-code">createElement</code> создает отдельные элементы, но они еще не связаны
+            между собой. <code class="inline-code">append</code> собирает эти элементы в DOM-дерево.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Append tree</span>
+            </div>
+            <pre><code>newColumnHeader.append(newColumnTitle);
+newColumnForm.append(newColumnInput, newColumnButton);
+newColumn.append(newColumnHeader, newColumnForm, taskList);
+columnsItem.append(newColumn);</code></pre>
+        </div>
+
+        <p>
+            Сначала собираются маленькие части: заголовок получает title, форма получает input и button.
+            Потом эти части добавляются внутрь колонки. Последний
+            <code class="inline-code">columnsItem.append(newColumn)</code> вставляет готовую колонку в настоящий
+            <code class="inline-code">ul#columns</code> на странице.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Mental model</span>
+            </div>
+            <pre><code>li.task-column
+├─ header.task-column__header
+│  └─ h2.task-column__title
+├─ form.add-task-form
+│  ├─ input.add-task-form__input
+│  └─ button.add-task-form__button
+└─ ul.task-list</code></pre>
+        </div>
+
+        <h3>Очистка input</h3>
+        <p>
+            После успешного создания колонки верхний input очищается:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Clear input</span>
+            </div>
+            <pre><code>addColumnInput.value = "";</code></pre>
+        </div>
+
+        <p>
+            Это setter-запись: свойству <code class="inline-code">value</code> input-элемента задается пустая строка.
+            Пользователь видит, что форма готова принять следующее название колонки.
+        </p>
+
+        <h3>e.target.closest()</h3>
+        <p>
+            <code class="inline-code">e.target</code> - это конкретный элемент, с которого началось событие.
+            Например, при клике по кнопке удаления target обычно будет сама кнопка. При submit формы target
+            обычно будет форма.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Event target</span>
+            </div>
+            <pre><code>columnsItem.addEventListener("click", (e) =&gt; {
+    console.log(e.target);
+});</code></pre>
+        </div>
+
+        <p>
+            Но в динамическом интерфейсе нам обычно нужен не просто элемент, по которому кликнули,
+            а ближайший смысловой контейнер: кнопка удаления, задача, колонка или форма.
+            Для этого используется <code class="inline-code">closest()</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Closest button</span>
+            </div>
+            <pre><code>const deleteButton = e.target.closest(".task__delete-button");</code></pre>
+        </div>
+
+        <p>
+            Эта строка читается так: "начни с элемента, где произошло событие, и поднимайся вверх по DOM,
+            пока не найдешь ближайший элемент с классом <code class="inline-code">task__delete-button</code>".
+            Если такой элемент не найден, вернется <code class="inline-code">null</code>.
+        </p>
+
+        <div class="callout">
+            Важное уточнение: <code class="inline-code">closest()</code> ищет только вверх по DOM-дереву:
+            сначала проверяет сам элемент, потом его родителя, потом родителя родителя и так далее.
+            Он не ищет соседей и не ищет дочерние элементы.
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Direction of closest</span>
+            </div>
+            <pre><code>button.task__delete-button
+└─ closest(".task")
+   └─ li.task</code></pre>
+        </div>
+
+        <p>
+            Для поиска вниз внутри уже найденного контейнера используется
+            <code class="inline-code">querySelector()</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">closest up, querySelector down</span>
+            </div>
+            <pre><code>const currentTask = deleteButton.closest(".task"); // вверх к li.task
+const taskText = currentTask.querySelector(".task__text"); // вниз внутрь li.task</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Guard after closest</span>
+            </div>
+            <pre><code>if (!deleteButton) {
+    return;
+}</code></pre>
+        </div>
+
+        <p>
+            Такая проверка нужна при делегировании событий. Обработчик висит на большом родителе
+            <code class="inline-code">columnsItem</code>, поэтому клик может произойти где угодно внутри доски:
+            по input, по заголовку, по карточке, по кнопке. Если клик был не по кнопке удаления,
+            обработчик просто выходит через <code class="inline-code">return</code>.
+        </p>
+
+        <h3>Маршрут до текущей задачи</h3>
+        <p>
+            После того как кнопка удаления найдена, нужно удалить не кнопку, а всю задачу
+            <code class="inline-code">li.task</code>. Поэтому от кнопки поднимаемся к ближайшей задаче.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Delete route</span>
+            </div>
+            <pre><code>const currentTask = deleteButton.closest(".task");
+currentTask.remove();</code></pre>
+        </div>
+
+        <p>
+            Модель маршрута:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Click path</span>
+            </div>
+            <pre><code>click
+└─ e.target
+   └─ closest(".task__delete-button")
+      └─ closest(".task")
+         └─ remove()</code></pre>
+        </div>
+
+        <h3>closest при добавлении задачи</h3>
+        <p>
+            Та же идея используется при добавлении задачи. Нужно понять, из какой колонки пришел submit.
+            Мы начинаем с формы задачи и поднимаемся к ближайшей колонке.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Current column route</span>
+            </div>
+            <pre><code>const taskForm = e.target.closest(".add-task-form");
+const currentColumn = taskForm.closest(".task-column");
+const taskList = currentColumn.querySelector(".task-list");</code></pre>
+        </div>
+
+        <p>
+            Так задача добавляется не в первую колонку и не во все колонки, а именно в список той колонки,
+            где пользователь нажал Add.
+        </p>
+
+        <p>
+            Здесь маршрут смешанный: сначала два раза идем вверх через
+            <code class="inline-code">closest()</code>, чтобы понять контекст, а потом идем вниз через
+            <code class="inline-code">querySelector()</code>, чтобы найти нужный список внутри этой колонки.
+        </p>
+
+        <div class="callout">
+            <code class="inline-code">closest()</code> - это способ найти контекст действия.
+            Кнопка говорит "удали мою задачу", форма говорит "добавь задачу в мою колонку".
+        </div>
+
+        <h3>Итог Step 1</h3>
+        <ol>
+            <li>Разметка разделена на верхнюю форму, viewport доски, ряд колонок, колонку, форму задачи и список задач.</li>
+            <li>Для горизонтальной доски используются <code class="inline-code">overflow-x: auto</code>, <code class="inline-code">display: flex</code> и <code class="inline-code">width: max-content</code>.</li>
+            <li>Колонка держит стабильную ширину через <code class="inline-code">flex: 0 0 280px</code>.</li>
+            <li>Стандартный левый padding у <code class="inline-code">ul</code> нужно обнулять отдельно.</li>
+            <li><code class="inline-code">submit</code> формы удобнее, чем отдельные обработчики click и Enter.</li>
+            <li><code class="inline-code">preventDefault()</code> отменяет стандартную отправку формы.</li>
+            <li><code class="inline-code">createElement</code> создает DOM-элемент в памяти.</li>
+            <li><code class="inline-code">classList.add</code> добавляет CSS-класс элементу.</li>
+            <li><code class="inline-code">textContent</code> безопасно вставляет пользовательский текст.</li>
+            <li><code class="inline-code">append</code> собирает элементы в дерево и вставляет готовую колонку в страницу.</li>
+            <li><code class="inline-code">e.target.closest(...)</code> помогает найти контекст события: форму, колонку, кнопку или задачу.</li>
+        </ol>
+    </section>
+</main>
+</body>
+</html>

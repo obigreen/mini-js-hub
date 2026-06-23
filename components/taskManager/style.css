@@ -120,6 +120,10 @@
     padding: 1rem;
 }
 
+.task:not(:last-child) {
+    margin-bottom: 8px;
+}
+
 
 .task__delete-button {
     position: absolute;
