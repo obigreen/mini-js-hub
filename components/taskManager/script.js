@@ -28,10 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const newColumnHeader = document.createElement('header');
         newColumnHeader.classList.add('task-column__header');
 
-        const newColumnDeteleButton = document.createElement('button');
-        newColumnDeteleButton.classList.add('task-column__delete-button');
-        newColumnDeteleButton.type = 'button';
-        newColumnDeteleButton.textContent = '×';
+        const newColumnDeleteButton = document.createElement('button');
+        newColumnDeleteButton.classList.add('task-column__delete-button');
+        newColumnDeleteButton.type = 'button';
+        newColumnDeleteButton.textContent = '×';
+        newColumnDeleteButton.setAttribute('aria-label', 'Delete column');
 
         const newColumnTitle = document.createElement('h2');
         newColumnTitle.classList.add('task-column__title');
@@ -56,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // создаем вложенность
         newColumn.append(newColumnHeader, newColumnForm, taskList);
-        newColumnHeader.append(newColumnTitle, newColumnDeteleButton);
+        newColumnHeader.append(newColumnTitle, newColumnDeleteButton);
         newColumnForm.append(newColumnInput, newColumnButton);
 
         // вкладываем в блок с колонками
@@ -97,13 +98,14 @@ document.addEventListener('DOMContentLoaded', () => {
         newTaskDeleteButton.classList.add('task__delete-button');
         newTaskDeleteButton.type = 'button';
         newTaskDeleteButton.textContent = '×';
+        newTaskDeleteButton.setAttribute('aria-label', 'Delete task');
 
         newTask.append(newTaskTitle, newTaskDeleteButton);
         taskList.append(newTask);
         taskInput.value = "";
     })
 
-    // удаление таски и колонки колонки
+    // удаление таски и колонки
     columnsItem.addEventListener('click', (e) => {
 
         const taskDeleteButton = e.target.closest('.task__delete-button');
