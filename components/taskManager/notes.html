@@ -781,6 +781,46 @@ const taskList = currentColumn.querySelector(".task-list");</code></pre>
             Кнопка говорит "удали мою задачу", форма говорит "добавь задачу в мою колонку".
         </div>
 
+        <h3>typeof и проверка библиотеки</h3>
+        <p>
+            Для Dragula добавилась проверка: загрузилась ли библиотека до нашего
+            <code class="inline-code">script.js</code>. Библиотека приходит из CDN и создает глобальную функцию
+            <code class="inline-code">window.dragula</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Library guard</span>
+            </div>
+            <pre><code>if (typeof window.dragula === "undefined") {
+    console.log("Dragula is not loaded");
+    return;
+}</code></pre>
+        </div>
+
+        <p>
+            Важный момент: оператор <code class="inline-code">typeof</code> возвращает строку.
+            Поэтому результат сравнивается со строкой <code class="inline-code">"undefined"</code>,
+            а не с обычным значением <code class="inline-code">undefined</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">typeof returns string</span>
+            </div>
+            <pre><code>typeof 123          // "number"
+typeof "hello"      // "string"
+typeof true         // "boolean"
+typeof undefined    // "undefined"
+typeof function(){} // "function"</code></pre>
+        </div>
+
+        <p>
+            Такая проверка безопасна для глобальных библиотек: если Dragula не загрузилась,
+            код не упадет на вызове <code class="inline-code">dragula(...)</code>, а спокойно остановится
+            с понятным сообщением в консоли.
+        </p>
+
         <h3>Итог Step 1</h3>
         <ol>
             <li>Разметка разделена на верхнюю форму, viewport доски, ряд колонок, колонку, форму задачи и список задач.</li>
@@ -794,6 +834,7 @@ const taskList = currentColumn.querySelector(".task-list");</code></pre>
             <li><code class="inline-code">textContent</code> безопасно вставляет пользовательский текст.</li>
             <li><code class="inline-code">append</code> собирает элементы в дерево и вставляет готовую колонку в страницу.</li>
             <li><code class="inline-code">e.target.closest(...)</code> помогает найти контекст события: форму, колонку, кнопку или задачу.</li>
+            <li><code class="inline-code">typeof</code> возвращает строку, поэтому проверка пишется как <code class="inline-code">typeof value === "undefined"</code>.</li>
         </ol>
     </section>
 </main>

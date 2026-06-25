@@ -3,7 +3,7 @@
 }
 
 .default_line {
-    margin: 0;
+    margin-bottom: 20px;
     color: rgba(255, 255, 255, 0.82);
 }
 
@@ -13,7 +13,7 @@
 }
 
 .task-board__columns,
-.task-list {
+.task-list, .gu-mirror {
     margin: 0;
     padding: 0;
     list-style: none;
@@ -80,6 +80,7 @@
 
 
 .task-column__header {
+    position: relative;
     padding: 16px;
     width: 100%;
     border-bottom: 1px solid #1b2e4b;
@@ -125,7 +126,7 @@
 }
 
 
-.task__delete-button {
+.task__delete-button, .task-column__delete-button {
     position: absolute;
     top: 0;
     right: 0;

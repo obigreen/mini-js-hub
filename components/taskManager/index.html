@@ -6,12 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Task manager</title>
     <link rel="stylesheet" href="../../css/common.css"/>
-    <!-- TASK 07 (Dragula). Подключить CSS библиотеки dragula перед style.css.
-         Для GitHub Pages удобнее CDN, потому что node_modules не попадает на Pages.
-         CSS нужен для служебных классов dragula: .gu-mirror, .gu-hide, .gu-transit.
-         Подключение:
-         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css">
-    -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.css">
     <link rel="stylesheet" href="./style.css"/>
 </head>
 
@@ -26,16 +21,22 @@
         </div>
 
         <h1 class="h1">Task manager</h1>
-        <p class="p-muted">drag and drop (библиотека - Dragula), БЭМ методология</p>
+        <p class="p-muted">drag-and-drop (библиотека - Dragula), БЭМ методология, localStorage</p>
 
         <section class="card default">
+
+            <p class="default_line">
+                Сильно доработанная версия относительно оригинала, с динамическим созданием, удалением отдельной задачи,
+                удалением колонок и с сохранением в localStorage
+            </p>
 
 
             <section class="task-manager" aria-label="Task-manager">
 
 
                 <form class="add-column-form">
-                    <input id="addColumn" class="add-column-form__input" type="text" placeholder="New column..." maxlength="24">
+                    <input id="addColumn" class="add-column-form__input" type="text" placeholder="New column..."
+                           maxlength="24">
                     <button class="add-column-form__button" type="submit" aria-label="Add column">Add column</button>
                 </form>
 
@@ -43,36 +44,34 @@
                     <ul class="task-board__columns" id="columns">
 
                         <!--a static column-->
-                        <li class="task-column">
+<!--                        <li class="task-column">-->
 
-                            <header class="task-column__header">
-                                <h2 class="task-column__title">
-                                    To Do
-                                </h2>
-                            </header>
 
-                            <form class="add-task-form">
-                                <input type="text" value="" placeholder="New task..." maxlength="40"
-                                       class="add-task-form__input"/>
-                                <button type="submit" class="add-task-form__button">Add</button>
-                            </form>
+<!--                            <header class="task-column__header">-->
+<!--                                <h2 class="task-column__title">-->
+<!--                                    To Do-->
+<!--                                </h2>-->
+<!--                                <button class="task-column__delete-button" type="button" aria-label="Delete task">×</button>-->
+<!--                            </header>-->
 
-                            <ul class="task-list" id="todoTasks">
-                                <li class="task">
-                                    <span class="task__text">Read documentation</span>
-                                    <button class="task__delete-button" type="button" aria-label="Delete task">×</button>
-                                </li>
-                            </ul>
-                        </li>
+<!--                            <form class="add-task-form">-->
+<!--                                <input type="text" value="" placeholder="New task..." maxlength="40"-->
+<!--                                       class="add-task-form__input"/>-->
+<!--                                <button type="submit" class="add-task-form__button">Add</button>-->
+<!--                            </form>-->
+
+<!--                            <ul class="task-list" id="todoTasks">-->
+<!--                                <li class="task">-->
+<!--                                    <span class="task__text">Read documentation</span>-->
+<!--                                    <button class="task__delete-button" type="button" aria-label="Delete task">×-->
+<!--                                    </button>-->
+<!--                                </li>-->
+<!--                            </ul>-->
+<!--                        </li>-->
 
                     </ul>
                 </div>
             </section>
-
-
-            <!--            <p class="default_line">-->
-            <!--                For ex. - Used files: <span class="mono">common.css</span> + <span class="mono">style.css</span> + <span class="mono">script.js</span>-->
-            <!--            </p>-->
 
         </section>
     </div>
@@ -128,12 +127,7 @@
     </footer>
 </main>
 
-<!-- TASK 07 (Dragula). Подключить JS библиотеки dragula перед script.js.
-     Порядок важен: сначала библиотека создает глобальную функцию dragula,
-     потом наш script.js сможет ее вызвать.
-     Подключение:
-     <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
--->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.3/dragula.min.js"></script>
 <script src="./script.js"></script>
 </body>
 </html>

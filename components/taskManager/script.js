@@ -28,6 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const newColumnHeader = document.createElement('header');
         newColumnHeader.classList.add('task-column__header');
 
+        const newColumnDeteleButton = document.createElement('button');
+        newColumnDeteleButton.classList.add('task-column__delete-button');
+        newColumnDeteleButton.type = 'button';
+        newColumnDeteleButton.textContent = '×';
+
         const newColumnTitle = document.createElement('h2');
         newColumnTitle.classList.add('task-column__title');
         newColumnTitle.textContent = columnTitle;
@@ -51,11 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // создаем вложенность
         newColumn.append(newColumnHeader, newColumnForm, taskList);
-        newColumnHeader.append(newColumnTitle);
+        newColumnHeader.append(newColumnTitle, newColumnDeteleButton);
         newColumnForm.append(newColumnInput, newColumnButton);
 
         // вкладываем в блок с колонками
         columnsItem.append(newColumn);
+        drake.containers.push(taskList);
         // очищаем инпут
         addColumnInput.value = "";
     })
@@ -97,48 +103,27 @@ document.addEventListener('DOMContentLoaded', () => {
         taskInput.value = "";
     })
 
-    // удаление таски
+    // удаление таски и колонки колонки
     columnsItem.addEventListener('click', (e) => {
 
-        const deleteButton = e.target.closest('.task__delete-button');
-        if (!deleteButton) {
+        const taskDeleteButton = e.target.closest('.task__delete-button');
+        if (taskDeleteButton) {
+            const currentTask = taskDeleteButton.closest('.task');
+            currentTask.remove();
             return;
         }
-        const currentTask = deleteButton.closest('.task');
-        currentTask.remove();
 
+        const columnDeleteButton = e.target.closest('.task-column__delete-button');
+        if (columnDeleteButton) {
+            const currentColumn = columnDeleteButton.closest('.task-column');
+            currentColumn.remove();
+        }
     })
 
-    // TASK 07 (Dragula). Подключить drag and drop для списков задач.
-    //
-    // Dragula работает не с карточками напрямую, а с контейнерами, внутри которых лежат карточки.
-    // В нашем случае контейнеры - это все ul.task-list.
-    //
-    // Что нужно сделать после подключения CDN в index.html:
-    //
-    // 1. Проверить, что функция dragula существует:
-    //    if (typeof dragula === "undefined") {
-    //        console.log("Dragula is not loaded");
-    //        return;
-    //    }
-    //
-    // 2. Найти все стартовые списки задач:
-    //    const taskLists = Array.from(document.querySelectorAll(".task-list"));
-    //
-    // 3. Создать экземпляр dragula:
-    //    const drake = dragula(taskLists);
-    //
-    // Почему Array.from:
-    // document.querySelectorAll(".task-list") возвращает NodeList.
-    // Dragula ожидает массив DOM-контейнеров. Array.from(...) превращает NodeList в обычный массив.
-    //
-    // Важно:
-    // На этом шаге dragula будет знать только те .task-list, которые существуют при загрузке страницы.
-    // Новые колонки, созданные через JS, появятся позже. Их task-list нужно будет отдельно добавить
-    // в drake.containers на следующем шаге.
-    //
-    // Проверка:
-    // После подключения CDN и создания drake стартовую задачу должно быть можно перетаскивать
-    // внутри стартовой task-list. Когда появятся две колонки, задачи можно будет таскать между их списками.
-
+    if (typeof window.dragula === "undefined") {
+        console.log("Dragula is not loaded");
+        return;
+    }
+    const taskLists = Array.from(document.querySelectorAll('.task-list'));
+    const drake = window.dragula(taskLists)
 })
