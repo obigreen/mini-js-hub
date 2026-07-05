@@ -11,6 +11,70 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // EXTRA TASK 01 (localStorage). Собрать состояние доски в обычные данные.
+    //
+    // Базовая версия task manager готова: колонки создаются, задачи создаются,
+    // задачи и колонки удаляются, drag and drop работает.
+    //
+    // Теперь localStorage. Но сначала НЕ пишем setItem.
+    // Первый шаг - научиться получать текущее состояние DOM-доски в виде массива объектов.
+    //
+    // Нужно получить такую структуру:
+    //
+    // [
+    //     {
+    //         title: "To Do",
+    //         tasks: ["Read documentation", "Make layout"]
+    //     },
+    //     {
+    //         title: "Done",
+    //         tasks: ["Create first column"]
+    //     }
+    // ]
+    //
+    // Почему именно так:
+    // localStorage не хранит DOM-элементы. Он хранит строки.
+    // Поэтому сначала переводим DOM в обычные JS-данные:
+    // column -> object
+    // task-list -> array
+    // task text -> string
+    //
+    // Задача:
+    // 1. Создай функцию getBoardState().
+    // 2. Внутри найди все колонки:
+    //    const columns = Array.from(columnsItem.querySelectorAll(".task-column"));
+    // 3. Верни columns.map(...), где каждая колонка превращается в объект.
+    // 4. Внутри каждой колонки найди title:
+    //    const title = column.querySelector(".task-column__title").textContent;
+    // 5. Внутри каждой колонки найди задачи:
+    //    const tasks = Array.from(column.querySelectorAll(".task__text")).map(...)
+    // 6. У каждой задачи возьми textContent.
+    // 7. Пока просто вызови console.log(getBoardState()) после добавления/удаления/drag, чтобы проверить данные.
+    //
+    // Каркас:
+    //
+    // function getBoardState() {
+    //     const columns = Array.from(columnsItem.querySelectorAll(".task-column"));
+    //
+    //     return columns.map((column) => {
+    //         const title = column.querySelector(".task-column__title").textContent;
+    //
+    //         const tasks = Array.from(column.querySelectorAll(".task__text")).map((taskText) => {
+    //             return taskText.textContent;
+    //         });
+    //
+    //         return {
+    //             title: title,
+    //             tasks: tasks
+    //         };
+    //     });
+    // }
+    //
+    // Важный смысл:
+    // querySelectorAll возвращает коллекцию DOM-элементов.
+    // Array.from превращает ее в массив, чтобы можно было использовать .map().
+    // .map() превращает один массив в другой массив.
+
     // событие добавления колонки
     addColumnForm.addEventListener('submit', (e) => {
         // preventDefault() не дает обновить форму после отправки
