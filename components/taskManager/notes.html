@@ -253,8 +253,8 @@
             <h1 class="note-title">Конспект разработки</h1>
             <nav class="note-nav" aria-label="Навигация по шагам">
                 <a href="#step1" class="is-active">Step 1</a>
-                <span>Step 2</span>
-                <span>Drag and Drop</span>
+                <a href="#step2">Step 2</a>
+                <a href="#dragula-cleanup">Dragula cleanup</a>
             </nav>
         </div>
     </header>
@@ -901,6 +901,413 @@ typeof function(){} // "function"</code></pre>
             <li><code class="inline-code">setAttribute</code> задает HTML-атрибуты созданным через JS элементам.</li>
             <li><code class="inline-code">e.target.closest(...)</code> помогает найти контекст события: форму, колонку, кнопку или задачу.</li>
             <li><code class="inline-code">typeof</code> возвращает строку, поэтому проверка пишется как <code class="inline-code">typeof value === "undefined"</code>.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step2">
+        <h2>Step 2: Состояние доски и localStorage</h2>
+        <p>
+            На этом этапе доска получила постоянное состояние. Колонки, задачи и порядок задач
+            сохраняются после каждого изменения, а после перезагрузки страницы DOM восстанавливается
+            из сохраненных данных.
+        </p>
+
+        <div class="callout">
+            Главная модель этапа:
+            DOM → обычные JS-данные → JSON-строка → localStorage →
+            JSON-строка → обычные JS-данные → DOM.
+        </div>
+
+        <h3>Почему нельзя сохранить DOM напрямую</h3>
+        <p>
+            DOM-элементы являются объектами браузера со свойствами, связями и методами.
+            <code class="inline-code">localStorage</code> хранит только строки, поэтому сначала
+            доску нужно описать простой структурой данных.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Board state</span>
+            </div>
+            <pre><code>[
+    {
+        title: "To Do",
+        tasks: ["Read documentation", "Make layout"]
+    },
+    {
+        title: "Done",
+        tasks: ["Create first column"]
+    }
+]</code></pre>
+        </div>
+
+        <p>
+            Один объект описывает одну колонку. Свойство <code class="inline-code">title</code>
+            содержит строку заголовка, а <code class="inline-code">tasks</code> - массив строк задач.
+            Такая структура не зависит от HTML и может быть преобразована в JSON.
+        </p>
+
+        <h3>DOM → массив объектов</h3>
+        <p>
+            Функция <code class="inline-code">getBoardState()</code> читает актуальный DOM.
+            Внешний <code class="inline-code">map()</code> превращает каждую колонку в объект,
+            а внутренний <code class="inline-code">map()</code> превращает элементы задач в строки.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">getBoardState</span>
+            </div>
+            <pre><code>function getBoardState() {
+    const columns = Array.from(
+        columnsItem.querySelectorAll(".task-column")
+    );
+
+    return columns.map((column) =&gt; {
+        const title = column
+            .querySelector(".task-column__title")
+            .textContent;
+
+        const tasks = Array.from(
+            column.querySelectorAll(".task__text")
+        ).map((taskText) =&gt; {
+            return taskText.textContent;
+        });
+
+        return {
+            title: title,
+            tasks: tasks
+        };
+    });
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">querySelectorAll()</code> возвращает
+            <code class="inline-code">NodeList</code>. Через <code class="inline-code">Array.from()</code>
+            коллекция превращается в обычный массив, после чего доступен привычный
+            <code class="inline-code">map()</code>.
+        </p>
+
+        <p>
+            В объекте <code class="inline-code">title: title</code> слева находится имя свойства,
+            справа - значение локальной переменной. То же относится к
+            <code class="inline-code">tasks: tasks</code>.
+        </p>
+
+        <h3>JSON.stringify и сохранение</h3>
+        <p>
+            Массив нельзя положить в <code class="inline-code">localStorage</code> как массив.
+            Сначала <code class="inline-code">JSON.stringify()</code> сериализует его в строку.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">saveBoard</span>
+            </div>
+            <pre><code>const STORAGE_KEY = "task-manager-board";
+
+function saveBoard() {
+    const boardState = getBoardState();
+    const boardStateJSON = JSON.stringify(boardState);
+
+    localStorage.setItem(STORAGE_KEY, boardStateJSON);
+}</code></pre>
+        </div>
+
+        <p>
+            Ключ - это имя записи. По тому же ключу приложение позднее получает данные.
+            В панели Application значение выглядит как массив, потому что DevTools умеет показывать
+            разобранный JSON, но фактически в хранилище находится строка.
+        </p>
+
+        <h3>Сохраняем после изменения DOM</h3>
+        <p>
+            Порядок операций принципиален:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Mutation order</span>
+            </div>
+            <pre><code>изменить DOM;
+saveBoard();</code></pre>
+        </div>
+
+        <p>
+            Если вызвать <code class="inline-code">saveBoard()</code> до
+            <code class="inline-code">append()</code> или <code class="inline-code">remove()</code>,
+            функция прочитает старое состояние. Сохранение выполняется после:
+        </p>
+
+        <ol>
+            <li>создания колонки;</li>
+            <li>создания задачи;</li>
+            <li>удаления задачи;</li>
+            <li>удаления колонки;</li>
+            <li>завершенного drag and drop.</li>
+        </ol>
+
+        <h3>Событие Dragula drop</h3>
+        <p>
+            Перемещением управляет библиотека, поэтому новый порядок сохраняется через ее событие
+            <code class="inline-code">drop</code>. К моменту вызова обработчика Dragula уже переставила
+            задачу в DOM, и <code class="inline-code">getBoardState()</code> прочитает новый порядок.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Save after drop</span>
+            </div>
+            <pre><code>drake.on("drop", function () {
+    saveBoard();
+});</code></pre>
+        </div>
+
+        <h3>Чтение: JSON.parse и стабильный тип результата</h3>
+        <p>
+            <code class="inline-code">localStorage.getItem()</code> возвращает строку, если ключ найден,
+            и <code class="inline-code">null</code>, если ключа нет. Это контракт метода:
+            отсутствующая запись здесь не равна <code class="inline-code">undefined</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">loadBoard</span>
+            </div>
+            <pre><code>function loadBoard() {
+    const savedBoardJSON = localStorage.getItem(STORAGE_KEY);
+
+    if (savedBoardJSON === null) {
+        return [];
+    }
+
+    return JSON.parse(savedBoardJSON);
+}</code></pre>
+        </div>
+
+        <p>
+            При отсутствии записи функция возвращает пустой массив, а не обычный
+            <code class="inline-code">return</code>. Обычный <code class="inline-code">return</code>
+            вернул бы <code class="inline-code">undefined</code>, после чего вызов
+            <code class="inline-code">forEach()</code> завершился бы ошибкой.
+        </p>
+
+        <div class="two-column">
+            <div>
+                <p><strong>Ключ отсутствует</strong></p>
+                <pre><code>getItem(STORAGE_KEY) // null
+loadBoard()          // []</code></pre>
+            </div>
+            <div>
+                <p><strong>Сохранена пустая доска</strong></p>
+                <pre><code>getItem(STORAGE_KEY) // "[]"
+loadBoard()          // []</code></pre>
+            </div>
+        </div>
+
+        <p>
+            Для приложения результат одинаковый - пустой массив. Но состояние хранилища разное:
+            в первом случае ключа нет, во втором ключ существует и содержит строку
+            <code class="inline-code">"[]"</code>.
+        </p>
+
+        <h3>Массив объектов → DOM</h3>
+        <p>
+            <code class="inline-code">renderBoard(boardState)</code> выполняет обратное преобразование.
+            Сначала контейнер очищается через <code class="inline-code">replaceChildren()</code>,
+            затем внешний <code class="inline-code">forEach()</code> создает колонки,
+            а вложенный <code class="inline-code">forEach()</code> - задачи текущей колонки.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Nested data traversal</span>
+            </div>
+            <pre><code>function renderBoard(boardState) {
+    columnsItem.replaceChildren();
+
+    boardState.forEach((columnData) =&gt; {
+        // columnData - объект одной колонки
+        newColumnTitle.textContent = columnData.title;
+
+        columnData.tasks.forEach((taskText) =&gt; {
+            // taskText - одна строка из массива tasks
+            newTaskTitle.textContent = taskText;
+        });
+    });
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">columnData.title</code> является одной строкой.
+            <code class="inline-code">columnData.tasks</code> является массивом, поэтому его нужно
+            перебрать. На каждой итерации внутреннего цикла
+            <code class="inline-code">taskText</code> содержит текст одной задачи.
+        </p>
+
+        <p>
+            В <code class="inline-code">renderBoard()</code> нет события
+            <code class="inline-code">e</code>, формы, введенного значения или
+            <code class="inline-code">taskInput</code>. Источник данных здесь не пользовательский submit,
+            а параметр <code class="inline-code">boardState</code>.
+        </p>
+
+        <h3>Порядок инициализации Dragula</h3>
+        <p>
+            Каждый восстановленный <code class="inline-code">taskList</code> регистрируется через
+            <code class="inline-code">drake.containers.push(taskList)</code>. Поэтому вызов
+            <code class="inline-code">renderBoard()</code> выполняется после создания
+            <code class="inline-code">drake</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Initialization order</span>
+            </div>
+            <pre><code>const drake = window.dragula(taskLists);
+
+drake.on("drop", function () {
+    saveBoard();
+});
+
+const savedBoard = loadBoard();
+renderBoard(savedBoard);</code></pre>
+        </div>
+
+        <p>
+            Функция <code class="inline-code">renderBoard</code> может быть объявлена выше
+            <code class="inline-code">drake</code>, потому что выполняется она позже. В момент фактического
+            вызова переменная уже инициализирована.
+        </p>
+
+        <h3>Область видимости drake</h3>
+        <p>
+            Переменная <code class="inline-code">drake</code> создана внутри обработчика
+            <code class="inline-code">DOMContentLoaded</code>. Поэтому код приложения внутри этого
+            обработчика видит переменную, а глобальная консоль браузера - нет.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Local scope</span>
+            </div>
+            <pre><code>document.addEventListener("DOMContentLoaded", () =&gt; {
+    const drake = window.dragula(taskLists);
+});
+
+console.log(drake); // ReferenceError: drake is not defined</code></pre>
+        </div>
+
+        <p>
+            Для временной диагностики <code class="inline-code">drake.containers</code> логировался
+            внутри обработчика удаления, где переменная доступна через лексическую область видимости.
+        </p>
+
+        <h3 id="dragula-cleanup">Удаление DOM и очистка Dragula</h3>
+        <p>
+            На каждую колонку приходится один контейнер
+            <code class="inline-code">ul.task-list</code>. При создании колонки ссылка на него
+            отдельно добавляется во внутренний массив Dragula.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Register container</span>
+            </div>
+            <pre><code>drake.containers.push(taskList);</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">currentColumn.remove()</code> удаляет колонку из DOM-дерева
+            документа, но не изменяет массив <code class="inline-code">drake.containers</code>.
+            Пока библиотека хранит ссылку, удаленный элемент остается достижимым в памяти.
+            Такой элемент называют отсоединенным DOM-узлом.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Two independent states</span>
+            </div>
+            <pre><code>document DOM:       column removed
+localStorage:       column removed
+drake.containers:   old taskList reference remains</code></pre>
+        </div>
+
+        <p>
+            Поэтому перед удалением колонки ее список нужно удалить из массива библиотеки.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Container cleanup</span>
+            </div>
+            <pre><code>const currentTaskList = currentColumn.querySelector(".task-list");
+const taskListIndex = drake.containers.indexOf(currentTaskList);
+
+if (taskListIndex !== -1) {
+    drake.containers.splice(taskListIndex, 1);
+}
+
+currentColumn.remove();
+saveBoard();</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">indexOf()</code> ищет тот же DOM-объект по ссылке.
+            Валидные индексы массива начинаются с <code class="inline-code">0</code>, а
+            <code class="inline-code">-1</code> означает, что элемент не найден.
+        </p>
+
+        <p>
+            Нельзя заменять проверку на <code class="inline-code">if (taskListIndex)</code>:
+            индекс <code class="inline-code">0</code> является falsy, хотя это найденный первый элемент,
+            а <code class="inline-code">-1</code> является truthy, хотя элемент не найден.
+        </p>
+
+        <p>
+            <code class="inline-code">splice(taskListIndex, 1)</code> изменяет исходный массив:
+            первый аргумент задает позицию, второй - количество удаляемых элементов.
+            Проверка на <code class="inline-code">-1</code> обязательна, потому что
+            <code class="inline-code">splice(-1, 1)</code> удалил бы последний рабочий контейнер.
+        </p>
+
+        <h3>Почему задачи не удаляются из drake.containers</h3>
+        <p>
+            В <code class="inline-code">drake.containers</code> зарегистрированы только зоны
+            перетаскивания - элементы <code class="inline-code">ul.task-list</code>.
+            Отдельные <code class="inline-code">li.task</code> туда не добавляются.
+            Dragula читает текущих дочерних элементов зарегистрированного списка непосредственно из DOM.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Dragula model</span>
+            </div>
+            <pre><code>task-column
+└─ task-list          // находится в drake.containers
+   ├─ task            // обычный дочерний DOM-элемент
+   ├─ task
+   └─ task</code></pre>
+        </div>
+
+        <p>
+            При удалении одной задачи контейнер продолжает существовать, поэтому достаточно
+            <code class="inline-code">currentTask.remove()</code>. При удалении колонки исчезает
+            и сам контейнер, поэтому требуется очистить ссылку в Dragula.
+        </p>
+
+        <h3>Итог Step 2</h3>
+        <ol>
+            <li>Состояние доски описывается массивом объектов, а не DOM-элементами.</li>
+            <li><code class="inline-code">JSON.stringify()</code> превращает данные в строку для хранения.</li>
+            <li><code class="inline-code">JSON.parse()</code> восстанавливает массив из строки.</li>
+            <li><code class="inline-code">getItem()</code> возвращает <code class="inline-code">null</code>, если ключ отсутствует.</li>
+            <li><code class="inline-code">loadBoard()</code> всегда возвращает массив, включая пустой <code class="inline-code">[]</code>.</li>
+            <li>Сохранение вызывается после изменения DOM, включая событие Dragula <code class="inline-code">drop</code>.</li>
+            <li>Вложенный <code class="inline-code">forEach()</code> восстанавливает задачи внутри текущей колонки.</li>
+            <li>Удаление элемента из документа не удаляет другие ссылки на него из памяти JavaScript.</li>
+            <li><code class="inline-code">indexOf()</code> и <code class="inline-code">splice()</code> очищают зарегистрированный контейнер Dragula.</li>
         </ol>
     </section>
 </main>

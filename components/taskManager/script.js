@@ -48,74 +48,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderBoard(boardState) {
+
         columnsItem.replaceChildren();
 
-        boardState.forEach(columnData => {
-            // create column
-            const newColumn = document.createElement('li');
-            newColumn.classList.add('task-column');
-            const newColumnHeader = document.createElement('header');
-            newColumnHeader.classList.add('task-column__header');
-
-            const newColumnDeleteButton = document.createElement('button');
-            newColumnDeleteButton.classList.add('task-column__delete-button');
-            newColumnDeleteButton.type = 'button';
-            newColumnDeleteButton.textContent = '×';
-            newColumnDeleteButton.setAttribute('aria-label', 'Delete column');
-
-            const newColumnTitle = document.createElement('h2');
-            newColumnTitle.classList.add('task-column__title');
-            newColumnTitle.textContent = columnData.title;
-
-            const newColumnForm = document.createElement('form');
-            newColumnForm.classList.add('add-task-form');
-            const newColumnInput = document.createElement('input');
-            newColumnInput.classList.add('add-task-form__input');
-            newColumnInput.type = 'text';
-            newColumnInput.placeholder = "New task...";
-            newColumnInput.maxLength = 40;
-
-            const newColumnButton = document.createElement('button');
-            newColumnButton.classList.add('add-task-form__button');
-            newColumnButton.type = 'submit';
-            newColumnButton.textContent = "Add"
-
-            // create task LIST! in created column
-            const taskList = document.createElement('ul');
-            taskList.classList.add('task-list');
-
-            // создаем вложенность
-            newColumn.append(newColumnHeader, newColumnForm, taskList);
-            newColumnHeader.append(newColumnTitle, newColumnDeleteButton);
-            newColumnForm.append(newColumnInput, newColumnButton);
-
-            // вкладываем в блок с колонками
-            columnsItem.append(newColumn);
-            drake.containers.push(taskList);
+        boardState.forEach((columnData) => {
+            const { newColumn, taskList } = createColumn(columnData);
 
             columnData.tasks.forEach((taskText) => {
-                //Создаем новую таску
-                const newTask = document.createElement('li');
-                newTask.classList.add('task');
-
-                const newTaskTitle = document.createElement('span');
-                newTaskTitle.classList.add('task__text');
-                newTaskTitle.textContent = taskText;
-
-                const newTaskDeleteButton = document.createElement('button');
-                newTaskDeleteButton.classList.add('task__delete-button');
-                newTaskDeleteButton.type = 'button';
-                newTaskDeleteButton.textContent = '×';
-                newTaskDeleteButton.setAttribute('aria-label', 'Delete task');
-
-                newTask.append(newTaskTitle, newTaskDeleteButton);
-                taskList.append(newTask);
+                taskList.append(createTask(taskText));
             });
 
-        })
+            columnsItem.append(newColumn);
+            drake.containers.push(taskList);
+        });
 
     }
-
 
     // событие добавления колонки
     addColumnForm.addEventListener('submit', (e) => {
@@ -127,6 +74,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (columnTitle === '') {
             return;
         }
+
+        const columnData = {
+            title: columnTitle,
+            tasks: []
+        };
+
+        const { newColumn, taskList } = createColumn(columnData);
+
+        columnsItem.append(newColumn);
+        drake.containers.push(taskList);
+
+        addColumnInput.value = "";
+        saveBoard();
+
+        console.log("Добавление", drake.containers.length);
+
+    })
+
+
+    function createColumn(columnData) {
 
         // create column
         const newColumn = document.createElement('li');
@@ -142,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const newColumnTitle = document.createElement('h2');
         newColumnTitle.classList.add('task-column__title');
-        newColumnTitle.textContent = columnTitle;
+        newColumnTitle.textContent = columnData.title;
 
         const newColumnForm = document.createElement('form');
         newColumnForm.classList.add('add-task-form');
@@ -166,34 +133,39 @@ document.addEventListener('DOMContentLoaded', () => {
         newColumnHeader.append(newColumnTitle, newColumnDeleteButton);
         newColumnForm.append(newColumnInput, newColumnButton);
 
-        // вкладываем в блок с колонками
-        columnsItem.append(newColumn);
-        drake.containers.push(taskList);
-        // очищаем инпут
-        addColumnInput.value = "";
-        saveBoard();
-    })
+        return {
+            newColumn: newColumn,
+            taskList: taskList
+        };
+    }
 
-    // событие добавление задачи
+
     columnsItem.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        const taskForm = e.target.closest('.add-task-form');
+        const taskForm = e.target.closest(".add-task-form");
+
         if (!taskForm) {
             return;
         }
-        // находим инпут именно внутри taskForm
-        const taskInput = taskForm.querySelector('.add-task-form__input');
+
+        const taskInput = taskForm.querySelector(".add-task-form__input");
         const taskText = taskInput.value.trim();
-        if (taskText === '') {
+        if (taskText === "") {
             return;
         }
-        // определяем нужную колонку внутри task-column
-        const currentColumn = taskForm.closest('.task-column');
-        // в нужной колонке ищем task-list
-        const taskList = currentColumn.querySelector('.task-list');
 
-        //Создаем новую таску
+        const currentColumn = taskForm.closest(".task-column");
+        const taskList = currentColumn.querySelector(".task-list");
+        const newTask = createTask(taskText);
+        taskList.append(newTask);
+        taskInput.value = "";
+        saveBoard();
+    })
+
+
+
+    function createTask(taskText) {
         const newTask = document.createElement('li');
         newTask.classList.add('task');
 
@@ -208,10 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
         newTaskDeleteButton.setAttribute('aria-label', 'Delete task');
 
         newTask.append(newTaskTitle, newTaskDeleteButton);
-        taskList.append(newTask);
-        taskInput.value = "";
-        saveBoard();
-    })
+        return newTask;
+    }
+
+
 
     // удаление таски и колонки
     columnsItem.addEventListener('click', (e) => {
@@ -225,68 +197,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const columnDeleteButton = e.target.closest('.task-column__delete-button');
-        if (columnDeleteButton) {
-            // EXTRA TASK 06 (Dragula cleanup). Полностью удалить колонку.
-            //
-            // currentColumn.remove() удаляет колонку только из DOM-дерева документа.
-            // Но при создании колонки мы отдельно сохранили ее taskList здесь:
-            //
-            // drake.containers.push(taskList);
-            //
-            // Поэтому перед удалением DOM-колонки нужно также удалить ссылку
-            // на ее taskList из массива drake.containers.
-            //
-            // Задача:
-            //
-            // 1. Найди удаляемую колонку, как сейчас:
-            //
-            //    const currentColumn = columnDeleteButton.closest(".task-column");
-            //
-            // 2. Внутри нее найди конкретный список задач:
-            //
-            //    const currentTaskList = currentColumn.querySelector(".task-list");
-            //
-            // 3. Найди позицию этого DOM-элемента в массиве Dragula:
-            //
-            //    const taskListIndex = drake.containers.indexOf(currentTaskList);
-            //
-            // indexOf() сравнивает элементы массива с currentTaskList и возвращает:
-            // - индекс 0, 1, 2... если элемент найден;
-            // - -1, если такого элемента в массиве нет.
-            //
-            // 4. Удали один элемент массива только при найденном индексе:
-            //
-            //    if (taskListIndex !== -1) {
-            //        drake.containers.splice(taskListIndex, 1);
-            //    }
-            //
-            // splice(откуда, сколько):
-            // taskListIndex - позиция нужного taskList;
-            // 1             - удалить ровно один элемент.
-            //
-            // Проверка !== -1 обязательна. Вызов splice(-1, 1) удалил бы
-            // последний элемент массива, то есть другую, рабочую колонку.
-            //
-            // 5. Только после очистки Dragula выполни:
-            //
-            //    currentColumn.remove();
-            //    saveBoard();
-            //
-            // Итоговый порядок:
-            // - нашли DOM-колонку;
-            // - нашли ее taskList;
-            // - удалили ссылку из drake.containers;
-            // - удалили колонку из DOM;
-            // - сохранили обновленное состояние.
-            //
-            // 6. Временные console.log после проверки удали.
-            //
-            // Проверка:
-            // создай 5 колонок и удаляй их без обновления страницы.
-            // После каждого удаления drake.containers.length должен уменьшаться:
-            // 5 -> 4 -> 3 -> 2 -> 1 -> 0.
 
+        if (columnDeleteButton) {
             const currentColumn = columnDeleteButton.closest('.task-column');
+            // удаление контейнера из dragula
+            const currentTaskList = currentColumn.querySelector(".task-list");
+            const taskListIndex = drake.containers.indexOf(currentTaskList);
+            if (taskListIndex !== -1) {
+                drake.containers.splice(taskListIndex, 1);
+            }
+
             console.log("До удаления:", drake.containers.length);
             currentColumn.remove();
             console.log("После удаления:", drake.containers.length);
