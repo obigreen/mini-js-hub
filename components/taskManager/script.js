@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         columnsItem.replaceChildren();
 
         boardState.forEach((columnData) => {
-            const { newColumn, taskList } = createColumn(columnData);
+            const {newColumn, taskList} = createColumn(columnData);
 
             columnData.tasks.forEach((taskText) => {
                 taskList.append(createTask(taskText));
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tasks: []
         };
 
-        const { newColumn, taskList } = createColumn(columnData);
+        const {newColumn, taskList} = createColumn(columnData);
 
         columnsItem.append(newColumn);
         drake.containers.push(taskList);
@@ -164,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
 
-
     function createTask(taskText) {
         const newTask = document.createElement('li');
         newTask.classList.add('task');
@@ -183,7 +182,49 @@ document.addEventListener('DOMContentLoaded', () => {
         return newTask;
     }
 
+    function textEditing(textElement) {
 
+        // если textElement найден, то есть активен, тайтл в фазе редактирования, то просто возвращаем, что бы не было повторного редактирования
+        if (textElement.querySelector(".text-editor")) {
+            return;
+        }
+
+        //previousText - сюда кладем старое название
+        const previousText = textElement.textContent;
+
+        //создаем input
+        const editInput = document.createElement('input');
+        editInput.classList.add('text-editor');
+        editInput.value = previousText;
+        editInput.type = "text";
+        // Метод проверяет: соответствует ли сам элемент указанному CSS-селектору.
+        editInput.maxLength = textElement.matches('.task-column__title') ? 25 : 40;
+
+        textElement.replaceChildren(editInput);
+        editInput.focus();
+        editInput.select();
+
+        editInput.addEventListener('blur', () => {
+            const editedText = editInput.value.trim();
+            const nextText = editedText || previousText;
+            textElement.textContent = nextText;
+
+            if (nextText !== previousText) {
+                saveBoard();
+            }
+
+        }, {once: true});
+    }
+
+    columnsItem.addEventListener('dblclick', (e) => {
+        const textElement = e.target.closest('.task-column__title, .task__text');
+
+        if (!textElement) {
+            return;
+        }
+
+        textEditing(textElement);
+    })
 
     // удаление таски и колонки
     columnsItem.addEventListener('click', (e) => {
