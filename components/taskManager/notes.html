@@ -254,6 +254,7 @@
             <nav class="note-nav" aria-label="Навигация по шагам">
                 <a href="#step1" class="is-active">Step 1</a>
                 <a href="#step2">Step 2</a>
+                <a href="#step3">Step 3</a>
                 <a href="#dragula-cleanup">Dragula cleanup</a>
             </nav>
         </div>
@@ -1308,6 +1309,409 @@ saveBoard();</code></pre>
             <li>Вложенный <code class="inline-code">forEach()</code> восстанавливает задачи внутри текущей колонки.</li>
             <li>Удаление элемента из документа не удаляет другие ссылки на него из памяти JavaScript.</li>
             <li><code class="inline-code">indexOf()</code> и <code class="inline-code">splice()</code> очищают зарегистрированный контейнер Dragula.</li>
+        </ol>
+    </section>
+
+    <section class="note-section" id="step3">
+        <h2>Step 3: Фабрики, области видимости и редактирование текста</h2>
+        <p>
+            На этом этапе повторяющееся создание DOM вынесено в функции
+            <code class="inline-code">createColumn()</code> и
+            <code class="inline-code">createTask()</code>. Затем поверх этой структуры добавлено
+            общее редактирование названия колонки и текста задачи по двойному клику.
+        </p>
+
+        <div class="callout">
+            Главная идея рефакторинга: функция создания отвечает за создание и возврат DOM.
+            Обработчик события отвечает за пользовательский сценарий: найти данные, вызвать фабрику,
+            вставить результат и сохранить состояние.
+        </div>
+
+        <h3>Контракт функции</h3>
+        <p>
+            Перед выделением функции полезно записать ее контракт: что она получает и что возвращает.
+            Это отделяет входные данные от побочных действий.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Factory contracts</span>
+            </div>
+            <pre><code>createTask(taskText)
+строка → li.task
+
+createColumn(columnData)
+объект данных → { newColumn, taskList }</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">createTask()</code> не ищет колонку, не очищает input
+            и не вызывает <code class="inline-code">saveBoard()</code>. Она не знает,
+            откуда пришел текст: от пользователя или из localStorage.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">createTask responsibility</span>
+            </div>
+            <pre><code>function createTask(taskText) {
+    const newTask = document.createElement("li");
+    // создание дочерних элементов
+
+    return newTask;
+}</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">return</code> завершает функцию и передает значение
+            вызывающему коду. Без <code class="inline-code">return newTask</code> результатом вызова
+            был бы <code class="inline-code">undefined</code>.
+        </p>
+
+        <h3>Возврат объекта из createColumn</h3>
+        <p>
+            Для дальнейшей работы нужны сразу два DOM-элемента: вся колонка и ее список задач.
+            Функция возвращает одно значение, поэтому элементы упакованы в один объект.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Return object</span>
+            </div>
+            <pre><code>return {
+    newColumn: newColumn,
+    taskList: taskList
+};</code></pre>
+        </div>
+
+        <p>
+            Слева находятся имена свойств возвращаемого объекта, справа - локальные переменные,
+            созданные внутри <code class="inline-code">createColumn()</code>.
+        </p>
+
+        <h3>Деструктуризация объекта</h3>
+        <p>
+            Деструктуризация достает свойства объекта в одноименные переменные.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Object destructuring</span>
+            </div>
+            <pre><code>const { newColumn, taskList } = createColumn(columnData);</code></pre>
+        </div>
+
+        <p>
+            Эта строка равнозначна более длинной записи:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Without destructuring</span>
+            </div>
+            <pre><code>const result = createColumn(columnData);
+const newColumn = result.newColumn;
+const taskList = result.taskList;</code></pre>
+        </div>
+
+        <h3>Фабрика и обработчик события - разные роли</h3>
+        <p>
+            Фабрика вызывается тогда, когда нужно получить новый элемент.
+            <code class="inline-code">addEventListener()</code> регистрирует callback, который будет
+            вызван браузером позднее после события. Обработчик не нужно помещать внутрь фабрики.
+        </p>
+
+        <div class="two-column">
+            <div>
+                <p><strong>Фабрика</strong></p>
+                <pre><code>function createColumn(data) {
+    // создать DOM
+    return result;
+}</code></pre>
+            </div>
+            <div>
+                <p><strong>Обработчик</strong></p>
+                <pre><code>form.addEventListener("submit", (e) =&gt; {
+    // получить input
+    // вызвать фабрику
+    // вставить DOM
+});</code></pre>
+            </div>
+        </div>
+
+        <h3>Лексическая область видимости</h3>
+        <p>
+            Переменная доступна внутри блока, где она объявлена, и во вложенных блоках.
+            Внешний код не может обратиться к переменной callback-функции.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Scope boundary</span>
+            </div>
+            <pre><code>function createColumn() {
+    form.addEventListener("submit", () =&gt; {
+        const taskList = document.createElement("ul");
+    });
+
+    console.log(taskList); // ReferenceError
+}</code></pre>
+        </div>
+
+        <p>
+            Отдельная сложность - время выполнения. Внешняя функция выполняется сейчас,
+            а callback события - только после будущего submit. Поэтому значение из будущего callback
+            нельзя вернуть обычным <code class="inline-code">return</code> внешней функции.
+        </p>
+
+        <h3>Одна фабрика, два источника данных</h3>
+        <p>
+            При ручном добавлении данные формируются из input. При восстановлении они приходят
+            из localStorage. Оба сценария вызывают одну и ту же фабрику, поэтому разметка остается
+            одинаковой.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Manual creation</span>
+            </div>
+            <pre><code>const columnData = {
+    title: columnTitle,
+    tasks: []
+};
+
+const { newColumn, taskList } = createColumn(columnData);</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Restore creation</span>
+            </div>
+            <pre><code>boardState.forEach((columnData) =&gt; {
+    const { newColumn, taskList } = createColumn(columnData);
+
+    columnData.tasks.forEach((taskText) =&gt; {
+        taskList.append(createTask(taskText));
+    });
+});</code></pre>
+        </div>
+
+        <h3>matches(selector)</h3>
+        <p>
+            Метод <code class="inline-code">matches()</code> проверяет, соответствует ли
+            сам DOM-элемент указанному CSS-селектору. Он возвращает boolean:
+            <code class="inline-code">true</code> или <code class="inline-code">false</code>.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Element.matches</span>
+            </div>
+            <pre><code>textElement.matches(".task-column__title"); // true или false
+textElement.matches(".task__text");         // true или false</code></pre>
+        </div>
+
+        <div class="two-column">
+            <div>
+                <p><strong>matches</strong></p>
+                <pre><code>element.matches(selector)
+// проверяет сам element</code></pre>
+            </div>
+            <div>
+                <p><strong>closest / querySelector</strong></p>
+                <pre><code>element.closest(selector)
+// сам element, затем вверх
+
+element.querySelector(selector)
+// поиск вниз среди потомков</code></pre>
+            </div>
+        </div>
+
+        <h3>Тернарный оператор</h3>
+        <p>
+            Тернарный оператор выбирает одно из двух значений в зависимости от условия.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Conditional value</span>
+            </div>
+            <pre><code>editInput.maxLength = textElement.matches(".task-column__title")
+    ? 24
+    : 40;</code></pre>
+        </div>
+
+        <p>
+            Общая форма:
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Ternary syntax</span>
+            </div>
+            <pre><code>условие ? значениеЕслиTrue : значениеЕслиFalse</code></pre>
+        </div>
+
+        <h3>replaceChildren()</h3>
+        <p>
+            <code class="inline-code">replaceChildren()</code> удаляет все дочерние узлы элемента
+            и добавляет переданные узлы как новое содержимое. Сам родительский элемент остается в DOM.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Replace text with input</span>
+            </div>
+            <pre><code>textElement.replaceChildren(editInput);</code></pre>
+        </div>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">DOM before and after</span>
+            </div>
+            <pre><code>// До:
+h2.task-column__title
+└─ "To Do"
+
+// После replaceChildren(editInput):
+h2.task-column__title
+└─ input.text-editor</code></pre>
+        </div>
+
+        <p>
+            Вызов без аргументов только очищает элемент:
+            <code class="inline-code">element.replaceChildren()</code>.
+            В отличие от <code class="inline-code">replaceWith()</code>,
+            сам <code class="inline-code">textElement</code> не заменяется.
+        </p>
+
+        <h3>focus() и select()</h3>
+        <p>
+            После вставки редактора <code class="inline-code">focus()</code> делает input активным,
+            а <code class="inline-code">select()</code> выделяет всё его текстовое значение.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Prepare editor</span>
+            </div>
+            <pre><code>editInput.focus();
+editInput.select();</code></pre>
+        </div>
+
+        <p>
+            Вызывать их нужно после вставки input в DOM. До вставки браузеру нечего фокусировать
+            как активную область интерфейса.
+        </p>
+
+        <h3>blur и третий аргумент addEventListener</h3>
+        <p>
+            Событие <code class="inline-code">blur</code> возникает, когда элемент теряет фокус.
+            Полная форма регистрации обработчика содержит третий аргумент с настройками.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">One-time blur listener</span>
+            </div>
+            <pre><code>editInput.addEventListener("blur", () =&gt; {
+    // завершить редактирование
+}, { once: true });</code></pre>
+        </div>
+
+        <p>
+            <code class="inline-code">{ once: true }</code> - объект опций
+            <code class="inline-code">addEventListener()</code>. После первого вызова браузер
+            автоматически удаляет обработчик. Это соответствует одноразовому жизненному циклу
+            временного input.
+        </p>
+
+        <h3>Логическое ИЛИ как запасное значение</h3>
+        <p>
+            После <code class="inline-code">trim()</code> пустая строка является falsy.
+            Оператор <code class="inline-code">||</code> возвращает первый truthy-операнд,
+            поэтому пустое изменение заменяется предыдущим текстом.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Fallback text</span>
+            </div>
+            <pre><code>const editedText = editInput.value.trim();
+const nextText = editedText || previousText;</code></pre>
+        </div>
+
+        <div class="two-column">
+            <div>
+                <p><strong>Непустое значение</strong></p>
+                <pre><code>"New title" || "Old title"
+// "New title"</code></pre>
+            </div>
+            <div>
+                <p><strong>Пустое значение</strong></p>
+                <pre><code>"" || "Old title"
+// "Old title"</code></pre>
+            </div>
+        </div>
+
+        <h3>Делегированный dblclick</h3>
+        <p>
+            Один обработчик на <code class="inline-code">columnsItem</code> обслуживает оба типа текста,
+            включая динамически созданные и восстановленные элементы.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Delegated editing</span>
+            </div>
+            <pre><code>columnsItem.addEventListener("dblclick", (e) =&gt; {
+    const textElement = e.target.closest(
+        ".task-column__title, .task__text"
+    );
+
+    if (!textElement) {
+        return;
+    }
+
+    textEditing(textElement);
+});</code></pre>
+        </div>
+
+        <p>
+            Запятая внутри CSS-селектора означает «любой из перечисленных селекторов».
+            <code class="inline-code">closest()</code> возвращает заголовок колонки или текст задачи,
+            в зависимости от места двойного клика.
+        </p>
+
+        <h3>Сохранение только реального изменения</h3>
+        <p>
+            Сначала input заменяется итоговой строкой, затем новое значение сравнивается со старым.
+            Если строки равны, запись в localStorage не требуется.
+        </p>
+
+        <div class="code-card">
+            <div class="code-card-header">
+                <span class="code-card-title">Commit edit</span>
+            </div>
+            <pre><code>textElement.textContent = nextText;
+
+if (nextText !== previousText) {
+    saveBoard();
+}</code></pre>
+        </div>
+
+        <h3>Итог Step 3</h3>
+        <ol>
+            <li>Фабрика получает данные и возвращает созданный DOM, не управляя пользовательским сценарием.</li>
+            <li><code class="inline-code">return</code> передает результат вызывающему коду.</li>
+            <li>Несколько значений можно вернуть внутри одного объекта.</li>
+            <li>Деструктуризация извлекает свойства объекта в локальные переменные.</li>
+            <li>Переменные callback-функции недоступны во внешней области видимости.</li>
+            <li><code class="inline-code">matches()</code> проверяет сам DOM-элемент.</li>
+            <li><code class="inline-code">replaceChildren()</code> заменяет содержимое, сохраняя родителя.</li>
+            <li><code class="inline-code">focus()</code> активирует input, а <code class="inline-code">select()</code> выделяет значение.</li>
+            <li><code class="inline-code">{ once: true }</code> автоматически снимает обработчик после первого события.</li>
+            <li><code class="inline-code">||</code> позволяет выбрать запасное значение для пустой строки.</li>
         </ol>
     </section>
 </main>
