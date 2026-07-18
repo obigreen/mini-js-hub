@@ -1,0 +1,17 @@
+{
+  "name": "bubble_wrap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "sass": "sass --no-source-map style.scss style.css",
+    "sass:watch": "sass --watch --no-source-map style.scss:style.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "sass": "^1.101.0"
+  }
+}

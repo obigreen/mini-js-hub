@@ -1,0 +1,91 @@
+.default {
+    width: 100%;
+}
+
+.default_line {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.default_line + .default_line {
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.70);
+}
+
+//----------------
+
+.card {
+    .bubs-grid {
+        display: grid;
+        justify-content: center;
+        //repeat() - повторяющиеся колонки
+        //auto-fill - автоматическое количество колонок
+        grid-template-columns: repeat(auto-fill, 58px);
+        gap: 3px;
+        background-color: #111111;
+        padding: 12px;
+
+        .bubble {
+            width: 56px;
+            height: 56px;
+            border: 0;
+            //сбрасывает сток тип (инпута в данном случае)
+            appearance: none;
+            //для мобаса
+            touch-action: manipulation;
+            background-image: url("./gif/bubble.gif");
+            background-size: 56px 100px;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            transform: rotate(var(--rotation-degrees));
+
+            &:checked {
+                cursor: default;
+                background-position: 0 -50px;
+            }
+
+            &:focus-visible {
+                outline: 2px solid #fff;
+                outline-offset: -4px;
+            }
+        }
+    }
+}
+
+.bubble-panel {
+
+    width: 100%;
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+
+    .loading-sound {
+        &.hide {
+            display: none;
+        }
+    }
+
+    #reset {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 150ms ease;
+        padding: 10px;
+        font-size: 20px;
+        background-color: #2f9f6b;
+        color: white;
+        border: none;
+        cursor: pointer;
+
+        &.hidden {
+            //скрываем но не убираем
+            opacity: 0;
+            //visibility: hidden запрещает фокус на невидимой кнопке
+            visibility: hidden;
+            //pointer-events: none запрещает нажатия указателем во время скрытия
+            pointer-events: none;
+        }
+    }
+}
